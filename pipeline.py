@@ -1,5 +1,5 @@
 import pymnet
-from pymnet import graphlets # graphlet_measures, data_analysis
+from pymnet import graphlets#, graphlet_measures #, data_analysis
 import os
 import time
 import itertools
@@ -8,6 +8,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import manifold
 from matplotlib.ticker import NullFormatter
+from collections import defaultdict as dd
 
 def main():
     
@@ -36,9 +37,9 @@ def main():
             
         nets, invs = graphlets.graphlets(n, net_layers, n_l, allowed_aspects=allowed_aspects)
         auts = graphlets.automorphism_orbits(nets, allowed_aspects=allowed_aspects)
-        orbit_is = orbit_numbers(n, nets, auts)
+        orbit_is = graphlets.orbit_numbers(n, nets, auts)
         orbit_is_d[n_l] = orbit_is
-        orbit_list = ordered_orbit_list(orbit_is)
+        orbit_list = graphlets.ordered_orbit_list(orbit_is)
         orbit_lists[n_l] = orbit_list
         
         for net, name in zip(networks, net_names):
@@ -58,7 +59,7 @@ def main():
                 
             for layer_comb in itertools.combinations(net_layers, n_l):
                 sub_net = pymnet.subnet(net, nodes, layer_comb)
-                orbits = graphlet_measures.orbit_counts_all(sub_net, n, nets, invs, auts, orbit_list, allowed_aspects=allowed_aspects)
+                orbits = graphlets.orbit_counts_all(sub_net, n, nets, invs, auts, orbit_list, allowed_aspects=allowed_aspects)
                 f_name = o_dir + '/' + name
                 for layer in layer_comb:
                     f_name += "_" + str(layer)
@@ -415,6 +416,77 @@ def write_orbit_counts(orbits, file_name, nodes, orbit_list):
         file.write(line)
         
     file.close()
+    
+    
+def write_equations():
+    '''
+    Writes the equations in LaTeX
+    '''
+    
+    n = 5
+    n_layers = 1
+    layers = list(range(n_layers))
+    nets, invs = graphlets.graphlets(n, layers)
+    if n_layers == 1:
+        nets = visualization.order_nets(nets)
+        invs = visualization.order_invs(invs)
+    auts = graphlets.automorphism_orbits(nets)
+    eqs = graphlets.orbit_equations(n, layers, nets, auts, invs)
+    
+    subs = dd()
+    for eq in eqs:
+        if len(eq[0]) != 3:
+            orbit1 = eq[0][0]
+            orbit2 = eq[1][0]
+            sub = graphlets.subtrahend(orbit1, orbit2, nets, auts, invs)
+            subs[eq] = sub
+                
+    orbit_is = graphlets.orbit_numbers(n, nets, auts)
+    if n_layers == 1:
+        orbit_is = visualization.order_orbit_is(orbit_is)
+    
+    for eq in eqs:
+        eq_tex = ""
+        if eq in subs:
+            orbit1 = eq[0][0]
+            o1 = orbit_is[orbit1]
+            k1 = eq[0][1]
+            orbit2 = eq[1][0]
+            o2 = orbit_is[orbit2]
+            k2 = eq[1][1]
+            sub = subs[eq]
+            eq_tex += "\\binom{C_{" + str(o1) + "}}{" + str(k1) + "} \\binom{C_{" + str(o2) + "}"
+            if sub > 0:
+                eq_tex += " - " + str(sub)
+                
+            eq_tex += "}{" + str(k2) + "}"
+            
+        else:
+            orbit = eq[0]
+            o = orbit_is[orbit]
+            k = eq[1]
+            eq_tex += "\\binom{C_{" + str(o) + "}}{" + str(k) + "}"
+            
+        eq_tex += " & = & "
+        orbits = set()
+        coefs = {}
+        for orbit in eqs[eq]:
+            o = orbit_is[orbit]
+            orbits.add(o)
+            coef = eqs[eq][orbit]
+            coefs[o] = coef
+                 
+        while len(orbits) > 0:
+            o = min(orbits)
+            orbits.remove(o)
+            coef = coefs[o]
+            if coef > 1:
+                eq_tex += str(coef) + " "
+            
+            eq_tex += "C_{" + str(o) + "} + "
+            
+        eq_tex += "\\\\ \n"
+        print(eq_tex)
     
     
 if __name__ == "__main__":
