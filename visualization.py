@@ -947,8 +947,7 @@ def layers3_nodes3():
             
     figure.savefig("figs/l3_n3.pdf", bbox_inches='tight')
     
-
-"""    
+   
 def layers2_nodes2():
     
     n = 2
@@ -956,9 +955,9 @@ def layers2_nodes2():
     layers = list(range(n_layers))
     layerLabels = layer_labels(layers)
     layers = [set(layers)]
-    nets, invs = graphlets.create_graphlets_general(n, layers, 1)
+    nets, invs = graphlets_general(n, layers, 1)
     nets[2][0].add_layer(1)
-    auts = functions.automorphism_orbits(nets, [1])
+    auts = graphlets.automorphism_orbits(nets, [1])
     orbit_is = orbit_numbers(n, nets, auts)
     color_ids = node_color_ids(n, nets, auts)
     figure = plt.figure(figsize=(12,16))
@@ -981,7 +980,7 @@ def multi_layers2_nodes2():
     layers = list(range(n_layers))
     layerLabels = layer_labels(layers)
     layers = [set(layers)]
-    nets, invs = graphlets.create_graphlets_general(n, layers, 1)
+    nets, invs = graphlets_general(n, layers, 1)
     nets[2][0].add_layer(1)
     multi_auts = multi_automorphism_orbits(nets, allowed_aspects=[1])
     multi_orbit_is = multi_orbit_numbers(n, nets, multi_auts)
@@ -1006,7 +1005,7 @@ def multi_layers2_nodes2_part():
     layers = list(range(n_layers))
     layerLabels = layer_labels(layers)
     layers = [set(layers)]
-    nets, invs = graphlets.create_graphlets_general(n, layers, 1)
+    nets, invs = graphlets_general(n, layers, 1)
     nets[2][0].add_layer(1)
     multi_auts = multi_automorphism_orbits(nets, allowed_aspects=[0,1])
     multi_orbit_is = multi_orbit_numbers(n, nets, multi_auts)
@@ -1025,7 +1024,116 @@ def multi_layers2_nodes2_part():
                 break
             
     figure.savefig("figs/multi_l2_n2_12.pdf", bbox_inches='tight')
-"""    
+    
+
+def graphlets_general(n, layers, aspects, allowed_aspects='all'):
+    '''
+    Function for creating all the general multilayer graphlets up to n nodes
+    
+    Parameters
+    ----------
+    n: int
+        maximum number of nodes
+    layers: list of iterables
+        each iterable contains the layers of one aspect
+    aspects: int
+        number of aspects
+    allowed_aspects: list, string
+        the aspects that can be permutated when computing isomorphisms
+    
+    Returns
+    -------
+    nets: dict (key: n_nodes, value: list of networks)
+        graphlets
+    invariants: dict (key: str(complete invariant), value: tuple(n_nodes, net_index in nets))
+        complete invariants of the graphlets
+        
+    Notes
+    -----
+    the aggregated networks of the graphlets are connected,
+    only undirected graphlets atm
+    '''
+    
+    nets = {}
+    invariants = {}
+    nets[1] = []
+    invariants[1] = {}
+    
+    layers_a = list(itertools.product(*layers))
+    layer_combs = graphlets.layer_combinations(layers_a)
+    for layer_comb in layer_combs:
+        self_links = list(itertools.combinations(layer_comb, 2))
+        n_links = len(self_links)
+        for n_l in range(n_links + 1):
+            for self_comb in itertools.combinations(self_links, n_l):
+                net0 = pymnet.MultilayerNetwork(aspects=aspects, fullyInterconnected=False)
+                for layer in layers_a:
+                    for k in range(aspects):
+                        net0.add_layer(layer[k], k)
+                for layer in layer_comb:
+                    if aspects < 2:
+                        layer = layer[0]
+                    net0.add_node(0, layer)
+                    
+                for e in self_comb:
+                    edge = [0, 0]
+                    for j in range(aspects):
+                        edge += [e[0][j], e[1][j]]
+                        
+                    net0[tuple(edge)] = 1
+                
+                ci = pymnet.get_complete_invariant(net0, allowed_aspects)
+                ci_s = str(ci)
+                if not ci_s in invariants[1]:
+                    invariants[1][ci_s] = (0, len(nets[1]))
+                    nets[1].append(net0)
+            
+    for i in range(1, n):
+        nets0 = nets[i]
+        nets1 = []
+        nodes = list(range(i))
+        for net in nets0:
+            for layer_comb in layer_combs:
+                node_layers = net.iter_node_layers()
+                edges = list(itertools.product(layer_comb, node_layers))
+                for n_e in range(1, len(edges)+1):
+                    for edge_comb in itertools.combinations(edges, n_e):
+                        self_links = list(itertools.combinations(layer_comb, 2))
+                        n_links = len(self_links)
+                        for n_l in range(n_links + 1):
+                            for self_comb in itertools.combinations(self_links, n_l):
+                                new_net = pymnet.subnet(net, nodes, *layers)
+                                for layer in layer_comb:
+                                    if aspects < 2:
+                                        layer = layer[0]
+                                    new_net.add_node(i, layer)
+                                for e in edge_comb:
+                                    edge = [i, e[1][0]]
+                                    for j in range(aspects):
+                                        edge += [e[0][j], e[1][j+1]]
+                                        
+                                    new_net[tuple(edge)] = 1
+                                    
+                                for e in self_comb:
+                                    edge = [i, i]
+                                    for j in range(aspects):
+                                        edge += [e[0][j], e[1][j]]
+                                        
+                                    new_net[tuple(edge)] = 1
+                                    
+                                ci = pymnet.get_complete_invariant(new_net, allowed_aspects)
+                                ci_s = str(ci)
+                                if not ci_s in invariants:
+                                    invariants[ci_s] = (i+1, len(nets1))
+                                    nets1.append(new_net)
+                            
+        nets[i+1] = nets1
+        
+    del nets[1]
+    del invariants[1]
+    
+    return nets, invariants
+    
     
 def equation_intermediate():
     
