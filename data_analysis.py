@@ -1,9 +1,10 @@
 import os
 import numpy as np
 import pandas as pd
-from .orbits import redundants
-from .graphlet_measures import GCM, GCD_matrix
-from .independent_equations import independent_equations, redundant_orbits
+#from .orbits import redundants
+from pymnet import graphlets
+#from .graphlet_measures import GCM, GCD_matrix
+#from .independent_equations import independent_equations, redundant_orbits
 
 def precision_recall(distances, groups):
     '''
@@ -117,8 +118,8 @@ def GCDs(nets, n, n_l, layers, res_dir, orbit_is, orbit_list, no_reds=False, all
     gcms = []
     
     if no_reds:
-        inds, eqs = independent_equations(n, n_l, layers, allowed_aspects=allowed_aspects)
-        reds = redundant_orbits(inds, eqs, orbit_is, orbit_list) #redundants[n_l]
+        inds, eqs = graphlets.independent_equations(n, n_l, layers, allowed_aspects=allowed_aspects)
+        reds = graphlets.redundant_orbits(inds, eqs, orbit_is, orbit_list) #redundants[n_l]
     
     for net in nets:
         o_dir = res_dir + net + "_" + str(n_l)
@@ -135,10 +136,10 @@ def GCDs(nets, n, n_l, layers, res_dir, orbit_is, orbit_list, no_reds=False, all
             if col[1] > str(n):
                 orbits = orbits.drop([col], axis=1)
         
-        gcm = GCM(orbits)
+        gcm = graphlets.GCM(orbits)
         gcms.append(gcm)
         
-    gcds = GCD_matrix(gcms)
+    gcds = graphlets.GCD_matrix(gcms)
     
     return gcds
     

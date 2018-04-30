@@ -1,5 +1,6 @@
+import data_analysis, visualization
 import pymnet
-from pymnet import graphlets#, graphlet_measures #, data_analysis
+from pymnet import graphlets
 import os
 import time
 import itertools
@@ -418,31 +419,38 @@ def write_orbit_counts(orbits, file_name, nodes, orbit_list):
     file.close()
     
     
-def write_equations():
+def write_equations(n, n_l, allowed_aspects='all'):
     '''
     Writes the equations in LaTeX
+    
+    Parameters
+    ----------
+    n : int
+        maximum number of nodes
+    n_l : int
+        Number of layers in the generated graphlets
+    allowed_aspects : list, string
+        the aspects that can be permutated when computing isomorphisms
     '''
     
-    n = 5
-    n_layers = 1
-    layers = list(range(n_layers))
-    nets, invs = graphlets.graphlets(n, layers)
-    if n_layers == 1:
+    layers = list(range(n_l))
+    nets, invs = graphlets.graphlets(n, layers, allowed_aspects=allowed_aspects)
+    if n_l == 1:
         nets = visualization.order_nets(nets)
         invs = visualization.order_invs(invs)
-    auts = graphlets.automorphism_orbits(nets)
-    eqs = graphlets.orbit_equations(n, layers, nets, auts, invs)
+    auts = graphlets.automorphism_orbits(nets, allowed_aspects)
+    eqs = graphlets.orbit_equations(n, nets, auts, invs, allowed_aspects)
     
     subs = dd()
     for eq in eqs:
         if len(eq[0]) != 3:
             orbit1 = eq[0][0]
             orbit2 = eq[1][0]
-            sub = graphlets.subtrahend(orbit1, orbit2, nets, auts, invs)
+            sub = graphlets.subtrahend(orbit1, orbit2, nets, auts, invs, allowed_aspects)
             subs[eq] = sub
                 
     orbit_is = graphlets.orbit_numbers(n, nets, auts)
-    if n_layers == 1:
+    if n_l == 1:
         orbit_is = visualization.order_orbit_is(orbit_is)
     
     for eq in eqs:
@@ -476,7 +484,7 @@ def write_equations():
             coef = eqs[eq][orbit]
             coefs[o] = coef
                  
-        while len(orbits) > 0:
+        while len(orbits) > 1:
             o = min(orbits)
             orbits.remove(o)
             coef = coefs[o]
@@ -484,6 +492,12 @@ def write_equations():
                 eq_tex += str(coef) + " "
             
             eq_tex += "C_{" + str(o) + "} + "
+            
+        o = min(orbits)
+        coef = coefs[o]
+        if coef > 1:
+            eq_tex += str(coef) + " "
+        eq_tex += "C_{" + str(o) + "} "
             
         eq_tex += "\\\\ \n"
         print(eq_tex)
