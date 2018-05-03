@@ -30,6 +30,7 @@ def graphlet_degree_distributions(network,nnodes,nlayers,allowed_aspects='all',s
             agg_net.add_node(node)
         for edge in network.edges:
             agg_net[edge[0],edge[1],0] = 1
+        network = agg_net
     
     for layer_comb in itertools.combinations(net_layers,nlayers):
         sub_net = pymnet.subnet(network,net_nodes,layer_comb)
