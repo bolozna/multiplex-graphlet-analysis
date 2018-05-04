@@ -1,16 +1,15 @@
 import pymnet
 import os
 import itertools
-from pipeline import write_orbit_counts
+import pipeline
 
 def graphlet_degree_distributions(network,nnodes,nlayers,allowed_aspects='all',save_name=None):
     
-    directory = 'Results'
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    
-    # layer names or numbers?    
-    
+    if save_name != None:
+        directory = 'Results/'+save_name+'_'+str(nlayers)
+        if not os.path.exists(directory):
+            os.makedirs(directory)
+        
     #net_nlayers = sum(1 for _ in network.iter_layers())
     if nlayers == 1:
         net_layers = [0]
@@ -36,12 +35,12 @@ def graphlet_degree_distributions(network,nnodes,nlayers,allowed_aspects='all',s
         sub_net = pymnet.subnet(network,net_nodes,layer_comb)
         orbits = pymnet.graphlets.orbit_counts_all(sub_net,nnodes,graphlets,invs,auts,orbit_list,allowed_aspects=allowed_aspects)
         
-    if save_name != None:
-        f_name = directory+'/'+save_name
-        for layer in layer_comb:
-            f_name += '_'+str(layer)
-        f_name += '.txt'
-        write_orbit_counts(orbits,f_name,net_nodes,orbit_list)
+        if save_name != None:
+            f_name = directory+'/'+save_name
+            for layer in layer_comb:
+                f_name += '_'+str(layer)
+            f_name += '.txt'
+            pipeline.write_orbit_counts(orbits,f_name,net_nodes,orbit_list)
         
-    return orbits
+    return
     
