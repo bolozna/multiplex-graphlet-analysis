@@ -1,9 +1,13 @@
 import filecmp
+import pymnet
+import interface
+import data_analysis
 
 def test_example_network_interface_equivalence():
     '''
     Tests if example network results are the same for pipeline functions
-    and interface functions. Results need to be in results folder.
+    and interface functions. Results need to be in results folder (interface
+    results appended with "interface_")
     '''
     directory = 'Results/'
     total = 0
@@ -31,6 +35,22 @@ def test_example_network_interface_equivalence():
     print('The number of networks is '+str(total))
     print('The number of successes is '+str(successes))
     return total,successes
+    
+def test_nonnumeric_layer_labels():
+    # not finished
+    net = pymnet.MultiplexNetwork(couplings='categorical')
+    net['node1','layer1']['node2','layer1'] = 1
+    net['node1','layer2']['node2','layer2'] = 1
+    net['node2','layer2']['node3','layer2'] = 1
+    #net[1,1][2,1] = 1
+    #net[1,2][2,2] = 1
+    #net[2,2][3,2] = 1
+    orbit_list = interface.graphlet_degree_distributions(net,3,2,save_name='nonnumeric')
+    df = data_analysis.sum_orbit_counts('Results/nonnumeric_2',orbit_list)
+    return df
+    
+    
+    
     
 if __name__ == '__main__':
     test_example_network_interface_equivalence()
