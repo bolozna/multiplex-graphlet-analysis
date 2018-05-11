@@ -43,4 +43,5 @@ def graphlet_degree_distributions(network,nnodes,nlayers,allowed_aspects='all',s
             f_name += '.txt'
             pipeline.write_orbit_counts(orbits,f_name,net_nodes,orbit_list)
         
-    return
+    return orbit_list
+
