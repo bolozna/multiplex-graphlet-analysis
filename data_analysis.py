@@ -182,6 +182,30 @@ def sum_orbit_counts(o_dir, orbit_list):
     return orbits
     
     
+def sum_orbit_counts_v2(o_dir,orbit_list):
+    # version where node names are preserved
+    dtypes = {}
+    col_names = []
+    for orbit in orbit_list:
+        dtypes[str(orbit)] = int
+        col_names.append(str(orbit))
+        
+    dtypes['n'] = str
+    
+    orbits = pd.DataFrame()
+    for file in os.listdir(o_dir):
+        f_name = o_dir + '/' + file
+        if orbits.empty:
+            orbits = pd.read_csv(f_name,index_col=0,skiprows=[0],header=None,names=col_names)
+            orbits.index.name = None
+        else:
+            orbits2 = pd.read_csv(f_name,index_col=0,skiprows=[0],header=None,names=col_names)
+            orbits.index.name = None
+            orbits = orbits.add(orbits2, fill_value=0)
+            
+    return orbits
+    
+    
 def get_column_names(orbit_list):
     '''
     for matching the order of the monoplex orbits with literature
