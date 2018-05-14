@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 from sklearn import manifold
 from matplotlib.ticker import NullFormatter
 from collections import defaultdict as dd
+import interface
 
 def main():
     
@@ -44,6 +45,9 @@ def main():
         orbit_lists[n_l] = orbit_list
         
         for net, name in zip(networks, net_names):
+            
+            interface.graphlet_degree_distributions(net,n,n_l,save_name='interface_'+name)            
+            
             o_dir = directory + '/' + name + '_' + str(n_l)
             if not os.path.exists(o_dir):
                 os.makedirs(o_dir)
