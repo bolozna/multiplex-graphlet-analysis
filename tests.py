@@ -2,6 +2,7 @@ import filecmp
 import pymnet
 import interface
 import data_analysis
+import pandas as pd
 
 def test_example_network_interface_equivalence():
     '''
@@ -80,21 +81,31 @@ def test_orbit_count_sum_functions():
     print('The number of successes is '+str(successes))
     return total,successes
     
-def test_nonnumeric_layer_labels():
-    # not finished
+def test_nonnumeric_labels():
     net = pymnet.MultiplexNetwork(couplings='categorical')
     net['node1','layer1']['node2','layer1'] = 1
     net['node1','layer2']['node2','layer2'] = 1
     net['node2','layer2']['node3','layer2'] = 1
-    #net[1,1][2,1] = 1
-    #net[1,2][2,2] = 1
-    #net[2,2][3,2] = 1
     orbit_list = interface.graphlet_degree_distributions(net,3,2,save_name='nonnumeric')
-    df = data_analysis.sum_orbit_counts('Results/nonnumeric_2',orbit_list)
-    return df
-    
-    
-    
+    df = interface.read_graphlet_degree_distribution_folder('Results/nonnumeric_2')
+    df.sort_index(inplace=True)
+    colnames = [str(s) for s in orbit_list]
+    comparison_df = pd.DataFrame(0,index=['node1','node2','node3'],columns=colnames)
+    comparison_df.at['node1','(2, 1, 0)'] = 1
+    comparison_df.at['node1','(3, 2, 2)'] = 1
+    comparison_df.at['node3','(2, 0, 0)'] = 1
+    comparison_df.at['node3','(3, 2, 1)'] = 1
+    comparison_df.at['node2','(2, 0, 0)'] = 1
+    comparison_df.at['node2','(2, 1, 0)'] = 1
+    comparison_df.at['node2','(3, 2, 0)'] = 1
+    comparison_df.sort_index(inplace=True)
+    assert df.equals(comparison_df), "Nonnumeric labels not read correctly"
+    print('Nonnumeric read successful')
     
 if __name__ == '__main__':
+    print('Interface:')
     test_example_network_interface_equivalence()
+    print('Orbit sum/load functions:')
+    test_orbit_count_sum_functions()
+    print('Nonnumeric labels:')
+    test_nonnumeric_labels()
