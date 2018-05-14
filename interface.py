@@ -3,6 +3,8 @@ import os
 import itertools
 #import pipeline
 import pipeline
+import pandas as pd
+import re
 
 def graphlet_degree_distributions(network,nnodes,nlayers,allowed_aspects='all',save_name=None):
     
@@ -44,4 +46,32 @@ def graphlet_degree_distributions(network,nnodes,nlayers,allowed_aspects='all',s
             pipeline.write_orbit_counts(orbits,f_name,net_nodes,orbit_list)
         
     return orbit_list
+
+def read_graphlet_degree_distribution_folder(folder):
+    '''
+    Reads GDDs from a folder containing files for individual layer combinations.
+    Every file must have the same first line (same orbits).
+    '''
+    orbits = pd.DataFrame()
+    header = None
+    for orbit_file in os.listdir(folder):
+        f_name = folder+'/'+orbit_file
+        with open(f_name) as f:
+            file_header = f.readline()
+        if header == None:
+            header = file_header
+        else:
+            assert file_header == header, 'Files need to have the same first line!'
+            
+        orbit_list = re.findall('\(.*?\)',header)
+        
+        if orbits.empty:
+            orbits = pd.read_csv(f_name,index_col=0,skiprows=[0],header=None,names=orbit_list)
+            orbits.index.name = None
+        else:
+            orbits2 = pd.read_csv(f_name,index_col=0,skiprows=[0],header=None,names=orbit_list)
+            orbits2.index.name = None
+            print(orbits2)
+            orbits = orbits.add(orbits2, fill_value=0)
+    return orbits
 
