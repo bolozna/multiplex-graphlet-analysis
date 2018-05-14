@@ -71,7 +71,6 @@ def read_graphlet_degree_distribution_folder(folder):
         else:
             orbits2 = pd.read_csv(f_name,index_col=0,skiprows=[0],header=None,names=orbit_list)
             orbits2.index.name = None
-            print(orbits2)
             orbits = orbits.add(orbits2, fill_value=0)
     return orbits
 
