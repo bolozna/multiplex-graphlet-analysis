@@ -200,7 +200,7 @@ def sum_orbit_counts_v2(o_dir,orbit_list):
             orbits.index.name = None
         else:
             orbits2 = pd.read_csv(f_name,index_col=0,skiprows=[0],header=None,names=col_names)
-            orbits.index.name = None
+            orbits2.index.name = None
             orbits = orbits.add(orbits2, fill_value=0)
             
     return orbits
