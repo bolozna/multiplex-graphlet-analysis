@@ -144,10 +144,12 @@ def example_networks(n_nets, n_n, n_l, m):
     ba_plex = []
     er_0 = []
     er_20 = []
+    ws = []
     
     ba_plex_names = []
     er_0_names = []
     er_20_names = []
+    ws_names = []
     
     for i in range(n_nets):
         net = pymnet.models.ba_total_degree(n_n, ms)
@@ -174,10 +176,28 @@ def example_networks(n_nets, n_n, n_l, m):
         er_20.append(net)
         er_20_names.append('er_20_' + str(i))
     
-    networks = ba_plex + er_0 + er_20
-    net_names = ba_plex_names + er_0_names + er_20_names
-    boundaries = [n_nets, n_nets*2, n_nets*3]
-    labels = ['BA-plex', 'ER$_{0,0}$', 'ER$_{20,20}$']
+    # TODO: add the rest of the networks
+    
+    # ws: check what the number of edges should be! Now its made so that m = number of connected nearest neighbors parameter of ws
+    for i in range(n_nets):
+        ws.append(pymnet.models.ws(n_n,[(m/2.0)*n_n]*n_l))
+        ws_names.append('ws_'+str(i))
+    
+    # still missing: ba, conf, conf plex, geo, ws
+    # conf degs should be based on ba and conf plex degs should be based on ba plex degs (?) -> normal ba needs to be implemented
+    # what is the approximate edge density in geo?
+    # what is the starting edge number in ws? The same m as in ba?
+    # what should the couplings be?
+    # are the er edges per layer (n_e) calculated correctly? n_e seems to be somehow average number of edges per layer in first ba plex net (except some edges get squished by aggregation so its less actually)
+    # check edge numbers per layer: should these be the same?
+    #for n in nets:
+    #    print len([x for x in list(n.edges) if x[2] == x[3]])
+
+    
+    networks = ba_plex + er_0 + er_20 + ws
+    net_names = ba_plex_names + er_0_names + er_20_names + ws_names
+    boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4]
+    labels = ['BA-plex', 'ER$_{0,0}$', 'ER$_{20,20}$', 'WS']
     
     return networks, net_names, boundaries, labels
     
