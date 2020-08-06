@@ -141,21 +141,31 @@ def example_networks(n_nets, n_n, n_l, m):
     
     ms = [m] * n_l
     
+    ba = []
     ba_plex = []
     er_0 = []
     er_20 = []
     ws = []
     
+    ba_names = []
     ba_plex_names = []
     er_0_names = []
     er_20_names = []
     ws_names = []
     
+    # ba
+    for i in range(n_nets):
+        net = ba_independent_multiplex(n_n, ms, couplings=None)
+        ba.append(net)
+        ba_names.append('ba_'+str(i))
+    
+    # ba plex
     for i in range(n_nets):
         net = pymnet.models.ba_total_degree(n_n, ms)
         ba_plex.append(net)
         ba_plex_names.append('ba_plex_' + str(i))
-        
+    
+    # er 0 and er 20
     net0 = ba_plex[0]
     agg_net = pymnet.aggregate(net0, 1)
     n_e = int(round(len(agg_net.edges) / float(n_l)))
@@ -187,21 +197,29 @@ def example_networks(n_nets, n_n, n_l, m):
     # conf degs should be based on ba and conf plex degs should be based on ba plex degs (?) -> normal ba needs to be implemented
     # what is the approximate edge density in geo?
     # what is the starting edge number in ws? The same m as in ba?
-    # what should the couplings be?
+    # !!! what should the couplings be? !!!
     # are the er edges per layer (n_e) calculated correctly? n_e seems to be somehow average number of edges per layer in first ba plex net (except some edges get squished by aggregation so its less actually)
     # check edge numbers per layer: should these be the same?
     #for n in nets:
     #    print len([x for x in list(n.edges) if x[2] == x[3]])
 
     
-    networks = ba_plex + er_0 + er_20 + ws
-    net_names = ba_plex_names + er_0_names + er_20_names + ws_names
-    boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4]
-    labels = ['BA-plex', 'ER$_{0,0}$', 'ER$_{20,20}$', 'WS']
+    networks = ba + ba_plex + er_0 + er_20 + ws
+    net_names = ba_names + ba_plex_names + er_0_names + er_20_names + ws_names
+    boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4, n_nets*5]
+    labels = ['BA', 'BA-plex', 'ER$_{0,0}$', 'ER$_{20,20}$', 'WS']
     
     return networks, net_names, boundaries, labels
-    
-    
+
+
+def ba_independent_multiplex(n, ms, couplings=None):
+    net = pymnet.MultiplexNetwork(couplings=couplings)
+    for ii in range(len(ms)):
+        net.add_layer(ii)
+        net.A[ii] = pymnet.nx.barabasi_albert_graph(n, ms[ii])
+    return net
+
+
 def precision_recall_plot(all_dists, boundaries, dist_name=''):
     '''
     Plots the Precision-Recall curves and computes the AUPR values
