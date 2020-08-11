@@ -165,6 +165,11 @@ def example_networks(n_nets, n_n, n_l, m):
         ba_plex.append(net)
         ba_plex_names.append('ba_plex_' + str(i))
     
+    # conf
+    for i in range(n_nets):
+        pass
+        # pymnet function taking a massive amount of time
+    
     # er 0 and er 20
     net0 = ba_plex[0]
     agg_net = pymnet.aggregate(net0, 1)
@@ -186,7 +191,10 @@ def example_networks(n_nets, n_n, n_l, m):
         er_20.append(net)
         er_20_names.append('er_20_' + str(i))
     
-    # TODO: add the rest of the networks
+    # geo
+    for i in range(n_nets):
+        geo_edge_number = n_n*m # approximate number of edges
+        # TODO: finish
     
     # ws: check what the number of edges should be! Now its made so that m = number of connected nearest neighbors parameter of ws
     for i in range(n_nets):
@@ -216,8 +224,20 @@ def ba_independent_multiplex(n, ms, couplings=None):
     net = pymnet.MultiplexNetwork(couplings=couplings)
     for ii in range(len(ms)):
         net.add_layer(ii)
-        net.A[ii] = pymnet.nx.barabasi_albert_graph(n, ms[ii])
+        net.A[ii] = pymnet.nx.barabasi_albert_graph(n, ms[ii]) # apparently the seed network has no edges so average degs are not accurate
     return net
+
+def conf_independent_multiplex(M):
+    # apply configuration model to every layer of multiplex network M independently
+    # uses 'bag of stubs' approach and multiedges and self-loops are simply not added at all
+    M_conf = pymnet.MultiplexNetwork(couplings=M.couplings)
+    for l in M.iter_layers():
+        M_conf.add_layer(l)
+        stubs = reduce(lambda bag,edge:bag+[edge[0]]+[edge[1]], M.A[l].edges, [])
+        for sampled_edge in np.random.choice(stubs, (len(stubs)/2,2), replace=False):
+            if sampled_edge[0] != sampled_edge[1]:
+                M_conf[sampled_edge[0],l][sampled_edge[1],l] = 1
+    return M_conf
 
 
 def precision_recall_plot(all_dists, boundaries, dist_name=''):
