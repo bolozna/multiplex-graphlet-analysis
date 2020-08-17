@@ -242,6 +242,28 @@ def conf_independent_multiplex(M):
                 M_conf[sampled_edge[0],l][sampled_edge[1],l] = 1
     return M_conf
 
+def get_overlap_degs(net):
+    # fixed version of the one in pymnet.diagnostics, function references working
+    ol_degs = {}
+    nodes = net.slices[0]
+    layers = net.slices[1]
+    
+    net0 = pymnet.subnet(net, nodes, layers)
+    
+    for n_l in range(len(layers), 0, -1):
+        for layer_comb in itertools.combinations(layers, n_l):
+            sub_net = pymnet.subnet(net0, nodes, layer_comb)
+            agg_net = pymnet.aggregate(sub_net, 1)
+            thr_net = pymnet.transforms.threshold(agg_net, n_l)
+            ol_degs[layer_comb] = pymnet.degs(thr_net, degstype='nodes')
+            
+            if n_l > 1:
+                for e in thr_net.edges:
+                    for layer in layer_comb:
+                        net0[e[0], e[1], layer] = 0
+                        
+    return ol_degs
+
 
 def precision_recall_plot(all_dists, boundaries, dist_name=''):
     '''
