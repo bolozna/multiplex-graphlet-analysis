@@ -264,6 +264,21 @@ def get_overlap_degs(net):
                         
     return ol_degs
 
+def simple_conf_overlaps(M):
+    # simplified version of conf_overlaps
+    # runs a configuration model for each type of edge overlap, but doesn't remove accidental extra overlaps, self-loops or multiedges
+    ol_degs = get_overlap_degs(M)
+    M_conf_overlap = pymnet.MultiplexNetwork(couplings=M.couplings)
+    for layer_comb in ol_degs:
+        for l in layer_comb:
+            M_conf_overlap.add_layer(l)
+        stubs = reduce(lambda bag,node:bag+[node]*ol_degs[layer_comb][node], ol_degs[layer_comb], [])
+        for sampled_edge in np.random.choice(stubs, (len(stubs)/2,2), replace=False):
+            if sampled_edge[0] != sampled_edge[1]:
+                for ll in layer_comb:
+                    M_conf_overlap[sampled_edge[0],ll][sampled_edge[1],ll] = 1
+    return M_conf_overlap
+
 
 def precision_recall_plot(all_dists, boundaries, dist_name=''):
     '''
