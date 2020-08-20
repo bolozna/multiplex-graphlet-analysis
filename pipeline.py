@@ -144,6 +144,7 @@ def example_networks(n_nets, n_n, n_l, m):
     ba = []
     ba_plex = []
     conf = []
+    conf_plex = []
     er_0 = []
     er_20 = []
     ws = []
@@ -151,6 +152,7 @@ def example_networks(n_nets, n_n, n_l, m):
     ba_names = []
     ba_plex_names = []
     conf_names = []
+    conf_plex_names = []
     er_0_names = []
     er_20_names = []
     ws_names = []
@@ -172,6 +174,12 @@ def example_networks(n_nets, n_n, n_l, m):
         net = conf_independent_multiplex(ba[i])
         conf.append(net)
         conf_names.append('conf_'+str(i))
+    
+    # conf plex
+    for i in range(n_nets):
+        net = simple_conf_overlaps(ba_plex[i])
+        conf_plex.append(net)
+        conf_plex_names.append('conf_plex_'+str(i))
     
     # er 0 and er 20
     net0 = ba_plex[0]
@@ -215,10 +223,10 @@ def example_networks(n_nets, n_n, n_l, m):
     #    print len([x for x in list(n.edges) if x[2] == x[3]])
 
     
-    networks = ba + ba_plex + conf + er_0 + er_20 + ws
-    net_names = ba_names + ba_plex_names + conf_names + er_0_names + er_20_names + ws_names
-    boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4, n_nets*5, n_nets*6]
-    labels = ['BA', 'BA-plex', 'conf', 'ER$_{0,0}$', 'ER$_{20,20}$', 'WS']
+    networks = ba + ba_plex + conf + conf_plex + er_0 + er_20 + ws
+    net_names = ba_names + ba_plex_names + conf_names + conf_plex_names + er_0_names + er_20_names + ws_names
+    boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4, n_nets*5, n_nets*6, n_nets*7]
+    labels = ['BA', 'BA-plex', 'conf', 'conf-plex', 'ER$_{0,0}$', 'ER$_{20,20}$', 'WS']
     
     return networks, net_names, boundaries, labels
 
