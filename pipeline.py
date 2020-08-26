@@ -212,7 +212,7 @@ def example_networks(n_nets, n_n, n_l, m):
         ws.append(pymnet.models.ws(n_n,[(m/2.0)*n_n]*n_l))
         ws_names.append('ws_'+str(i))
     
-    # still missing: conf plex, geo
+    # still missing: geo
     # conf degs should be based on ba and conf plex degs should be based on ba plex degs (?) -> normal ba needs to be implemented
     # what is the approximate edge density in geo?
     # what is the starting edge number in ws? The same m as in ba?
