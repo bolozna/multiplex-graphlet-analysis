@@ -5,6 +5,7 @@ import os
 import time
 import itertools
 import numpy as np
+import random
 import seaborn as sns
 import matplotlib.pyplot as plt
 from sklearn import manifold
@@ -235,8 +236,27 @@ def ba_independent_multiplex(n, ms, couplings=None):
     net = pymnet.MultiplexNetwork(couplings=couplings)
     for ii in range(len(ms)):
         net.add_layer(ii)
-        net.A[ii] = pymnet.nx.barabasi_albert_graph(n, ms[ii]) # apparently the seed network has no edges so average degs are not accurate
+        #net.A[ii] = pymnet.nx.barabasi_albert_graph(n, ms[ii]) # apparently the seed network has no edges so average degs are not accurate
+        net.A[ii] = ba_single_layer(n, ms[ii])
     return net
+
+def ba_single_layer(n,m):
+    net = pymnet.full(nodes=m+1,layers=None)
+    rng = random.Random()
+    stubs = list(range(m+1))*m
+    for node in range(m+1,n):
+        sample = sample_stubs(stubs,m,rng)
+        for target in sample:
+            net[node,target] = 1
+        stubs.extend([node]*m)
+        stubs.extend(sample)
+    return net
+
+def sample_stubs(stubs,m,rng):
+    sample = set()
+    while len(sample) < m:
+        sample.add(rng.choice(stubs))
+    return sample
 
 def conf_independent_multiplex(M):
     # apply configuration model to every layer of multiplex network M independently
