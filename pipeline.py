@@ -148,6 +148,7 @@ def example_networks(n_nets, n_n, n_l, m):
     conf_plex = []
     er_0 = []
     er_20 = []
+    geo = []
     ws = []
     
     ba_names = []
@@ -156,6 +157,7 @@ def example_networks(n_nets, n_n, n_l, m):
     conf_plex_names = []
     er_0_names = []
     er_20_names = []
+    geo_names = []
     ws_names = []
     
     # ba
@@ -206,14 +208,15 @@ def example_networks(n_nets, n_n, n_l, m):
     # geo
     for i in range(n_nets):
         geo_edge_number = n_n*m # approximate number of edges
-        # TODO: finish
+        net = pymnet.models.geo(n_n, [geo_edge_number]*n_l)
+        geo.append(net)
+        geo_names.append('geo_'+str(i))
     
     # ws: check what the number of edges should be! Now its made so that m = number of connected nearest neighbors parameter of ws
     for i in range(n_nets):
         ws.append(pymnet.models.ws(n_n,[(m/2.0)*n_n]*n_l))
         ws_names.append('ws_'+str(i))
     
-    # still missing: geo
     # conf degs should be based on ba and conf plex degs should be based on ba plex degs (?) -> normal ba needs to be implemented
     # what is the approximate edge density in geo?
     # what is the starting edge number in ws? The same m as in ba?
@@ -224,10 +227,10 @@ def example_networks(n_nets, n_n, n_l, m):
     #    print len([x for x in list(n.edges) if x[2] == x[3]])
 
     
-    networks = ba + ba_plex + conf + conf_plex + er_0 + er_20 + ws
-    net_names = ba_names + ba_plex_names + conf_names + conf_plex_names + er_0_names + er_20_names + ws_names
-    boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4, n_nets*5, n_nets*6, n_nets*7]
-    labels = ['BA', 'BA-plex', 'conf', 'conf-plex', 'ER$_{0,0}$', 'ER$_{20,20}$', 'WS']
+    networks = ba + ba_plex + conf + conf_plex + er_0 + er_20 + geo + ws
+    net_names = ba_names + ba_plex_names + conf_names + conf_plex_names + er_0_names + er_20_names + geo_names + ws_names
+    boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4, n_nets*5, n_nets*6, n_nets*7, n_nets*8]
+    labels = ['BA', 'BA-plex', 'conf', 'conf-plex', 'ER$_{0,0}$', 'ER$_{20,20}$', 'geo', 'WS']
     
     return networks, net_names, boundaries, labels
 
