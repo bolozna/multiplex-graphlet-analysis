@@ -14,6 +14,13 @@ from collections import defaultdict as dd
 from scipy.stats import spearmanr
 import interface
 
+# try importing Dimitrova, Petrovski, Kocarev method
+try:
+    import Multiplex_Graph
+    DPK_available = True
+except ImportError:
+    DPK_available = False
+
 
 def main():
     
