@@ -11,7 +11,9 @@ import matplotlib.pyplot as plt
 from sklearn import manifold
 from matplotlib.ticker import NullFormatter
 from collections import defaultdict as dd
+from scipy.stats import spearmanr
 import interface
+
 
 def main():
     
@@ -110,8 +112,16 @@ def main():
         fig = MDS_plot(gcds, boundaries, labels, title)
         auprs = pairwise_auprs(gcds, boundaries, labels, title)
         fig = plot_AUPRs(auprs, labels=labels, title=title)
-    
-    
+
+
+def gcds_for_Dimitrova_Petrovski_Kocarev_method(orb_mats):
+    gcms = []
+    for orb_mat in orb_mats:
+        orb_mat_with_dummy = np.row_stack(orb_mat,[1]*orb_mat.shape[1])
+        gcms.append(spearmanr(orb_mat_with_dummy)[0])
+    return graphlets.GCD_matrix(gcms)
+
+
 def example_networks(n_nets, n_n, n_l, m):
     '''
     Generates a test set of networks.
