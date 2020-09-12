@@ -133,7 +133,7 @@ def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
         orb_mats.append(graphF.return_orbits_Mat().values)
     gcms = []
     for orb_mat in orb_mats:
-        orb_mat_with_dummy = np.row_stack(orb_mat,[1]*orb_mat.shape[1])
+        orb_mat_with_dummy = np.row_stack((orb_mat,[1]*orb_mat.shape[1]))
         gcms.append(spearmanr(orb_mat_with_dummy)[0])
     return graphlets.GCD_matrix(gcms)
 
