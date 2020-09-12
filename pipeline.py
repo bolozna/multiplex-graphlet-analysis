@@ -121,7 +121,16 @@ def main():
         fig = plot_AUPRs(auprs, labels=labels, title=title)
 
 
-def gcds_for_Dimitrova_Petrovski_Kocarev_method(orb_mats):
+def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
+    orb_mats = []
+    for M in networks:
+        graph_edges = [(e[0],e[1],e[2]) if e[2]==e[3] else None for e in M.edges]
+        graphF = Multiplex_Graph.GraphFunc(doDirected=False)
+        graphF.make_graph_table(graph_edges)
+        graphF.make_direct_neighbours(subOne=False)
+        graphF.make_zero_orbit()
+        graphF.count_tri_graphs()
+        orb_mats.append(graphF.return_orbits_Mat().values)
     gcms = []
     for orb_mat in orb_mats:
         orb_mat_with_dummy = np.row_stack(orb_mat,[1]*orb_mat.shape[1])
