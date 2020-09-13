@@ -24,8 +24,8 @@ except ImportError:
 
 def main():
     
-    n_nets = 5
-    n_n = 10
+    n_nets = 10
+    n_n = 20
     n_l = 3
     m = 2
     allowed_aspects = 'all'
