@@ -107,6 +107,9 @@ def main():
             net_layers = list(range(n_l))
         gcds = data_analysis.GCDs(net_names, n, n_l, net_layers, res_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects)
         all_gcds[(n_l, n, r)] = gcds
+    
+    if DPK_available:
+        all_gcds[('DPK','','')] = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks)
         
     end = time.time()
     print(end - start)
@@ -358,9 +361,14 @@ def precision_recall_plot(all_dists, boundaries, dist_name=''):
         Figure with Precision-Recall curves
     '''
     
-    c = {(1,4) : 'blue', (1,3) : 'cyan', (2,4) : 'purple', (2,3) : 'magenta', (3,3) : 'orange'}
-    ls = {'' : '-', 'R' : '--'}
-    types = [(1,4,''), (1,4,'R'), (1,3,''), (1,3,'R'), (2,4,''), (2,4,'R'), (2,3,''), (2,3,'R'), (3,3,''), (3,3,'R')]
+    if DPK_available:
+        c = {(1,4) : 'blue', (1,3) : 'cyan', (2,4) : 'purple', (2,3) : 'magenta', (3,3) : 'orange', ('DPK','') : 'green'}
+        ls = {'' : '-', 'R' : '--'}
+        types = [(1,4,''), (1,4,'R'), (1,3,''), (1,3,'R'), (2,4,''), (2,4,'R'), (2,3,''), (2,3,'R'), (3,3,''), (3,3,'R'), ('DPK','','')]
+    else:
+        c = {(1,4) : 'blue', (1,3) : 'cyan', (2,4) : 'purple', (2,3) : 'magenta', (3,3) : 'orange'}
+        ls = {'' : '-', 'R' : '--'}
+        types = [(1,4,''), (1,4,'R'), (1,3,''), (1,3,'R'), (2,4,''), (2,4,'R'), (2,3,''), (2,3,'R'), (3,3,''), (3,3,'R')]
     
     groups = group_labels(boundaries)
     
