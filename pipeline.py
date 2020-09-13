@@ -130,7 +130,8 @@ def main():
 def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
     orb_mats = []
     for M in networks:
-        graph_edges = [(e[0],e[1],e[2]) if e[2]==e[3] else None for e in M.edges]
+        assert isinstance(M,pymnet.MultiplexNetwork)
+        graph_edges = [(e[0],e[1],e[2]) for e in M.edges if e[2]==e[3]]
         graphF = Multiplex_Graph.GraphFunc(doDirected=False)
         graphF.make_graph_table(graph_edges)
         graphF.make_direct_neighbours(subOne=False)
