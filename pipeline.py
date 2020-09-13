@@ -115,16 +115,16 @@ def main():
     print(end - start)
     
     dist_name = 'GCD'
-    fig = precision_recall_plot(all_gcds, boundaries, dist_name)
-    plt.savefig('precision_recall.pdf')
+    fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name)
+    fig.savefig('precision_recall.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
     for n_l, n, r in all_gcds:
         gcds = all_gcds[(n_l, n, r)]
         title = dist_name + '-' + str(n_l) + '-' + str(n) + r
-        fig = MDS_plot(gcds, boundaries, labels, title)
-        plt.savefig('mds_'+title+'.pdf')
+        fig,lgd = MDS_plot(gcds, boundaries, labels, title)
+        fig.savefig('mds_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
         auprs = pairwise_auprs(gcds, boundaries, labels, title)
         fig = plot_AUPRs(auprs, labels=labels, title=title)
-        plt.savefig('pairwise_auprs_'+title+'.pdf')
+        fig.savefig('pairwise_auprs_'+title+'.pdf',bbox_inches='tight')
 
 
 def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
@@ -390,9 +390,9 @@ def precision_recall_plot(all_dists, boundaries, dist_name=''):
         
     ax.set_xlabel('Recall')
     ax.set_ylabel('Precision')
-    ax.legend(loc=7, bbox_to_anchor=(1.42, 0.5))
+    lgd = ax.legend(loc=7, bbox_to_anchor=(1.42, 0.5))
     
-    return pr_fig
+    return pr_fig,lgd
     
     
 def MDS_plot(dists, boundaries, labels, title=''):
@@ -431,11 +431,11 @@ def MDS_plot(dists, boundaries, labels, title=''):
     ax_mds.xaxis.set_major_formatter(NullFormatter())
     ax_mds.yaxis.set_major_formatter(NullFormatter())
     ax_mds.zaxis.set_major_formatter(NullFormatter())
-    ax_mds.legend(labels, loc=7, bbox_to_anchor=(1.3, 0.5))
+    lgd = ax_mds.legend(labels, loc=7, bbox_to_anchor=(1.3, 0.5))
     plt.title(title)
     plt.axis('tight')
     
-    return mds_fig
+    return mds_fig,lgd
     
     
 def pairwise_auprs(dists, boundaries, labels, title=''):
