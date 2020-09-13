@@ -116,12 +116,15 @@ def main():
     
     dist_name = 'GCD'
     fig = precision_recall_plot(all_gcds, boundaries, dist_name)
+    plt.savefig('precision_recall.pdf')
     for n_l, n, r in all_gcds:
         gcds = all_gcds[(n_l, n, r)]
         title = dist_name + '-' + str(n_l) + '-' + str(n) + r
         fig = MDS_plot(gcds, boundaries, labels, title)
+        plt.savefig('mds_'+title+'.pdf')
         auprs = pairwise_auprs(gcds, boundaries, labels, title)
         fig = plot_AUPRs(auprs, labels=labels, title=title)
+        plt.savefig('pairwise_auprs_'+title+'.pdf')
 
 
 def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
