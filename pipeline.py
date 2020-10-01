@@ -24,10 +24,10 @@ except ImportError:
 
 def main():
     
-    n_nets = 10
-    n_n = 20
-    n_l = 3
-    m = 2
+    n_nets = 25
+    n_n = 1000
+    n_l = 10
+    m = 3
     allowed_aspects = 'all'
     
     networks, net_names, boundaries, labels = example_networks(n_nets, n_n, n_l, m)
@@ -116,15 +116,15 @@ def main():
     
     dist_name = 'GCD'
     fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name)
-    fig.savefig('precision_recall.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
+    fig.savefig('precision_recall_1.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
     for n_l, n, r in all_gcds:
         gcds = all_gcds[(n_l, n, r)]
         title = dist_name + '-' + str(n_l) + '-' + str(n) + r
         fig,lgd = MDS_plot(gcds, boundaries, labels, title)
-        fig.savefig('mds_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
+        fig.savefig('mds_1_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
         auprs = pairwise_auprs(gcds, boundaries, labels, title)
         fig = plot_AUPRs(auprs, labels=labels, title=title)
-        fig.savefig('pairwise_auprs_'+title+'.pdf',bbox_inches='tight')
+        fig.savefig('pairwise_auprs_1_'+title+'.pdf',bbox_inches='tight')
 
 
 def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
@@ -337,10 +337,11 @@ def simple_conf_overlaps(M):
         for l in layer_comb:
             M_conf_overlap.add_layer(l)
         stubs = reduce(lambda bag,node:bag+[node]*ol_degs[layer_comb][node], ol_degs[layer_comb], [])
-        for sampled_edge in np.random.choice(stubs, (len(stubs)/2,2), replace=False):
-            if sampled_edge[0] != sampled_edge[1]:
-                for ll in layer_comb:
-                    M_conf_overlap[sampled_edge[0],ll][sampled_edge[1],ll] = 1
+        if stubs:
+            for sampled_edge in np.random.choice(stubs, (len(stubs)/2,2), replace=False):
+                if sampled_edge[0] != sampled_edge[1]:
+                    for ll in layer_comb:
+                        M_conf_overlap[sampled_edge[0],ll][sampled_edge[1],ll] = 1
     return M_conf_overlap
 
 
