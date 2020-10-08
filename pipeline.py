@@ -25,8 +25,8 @@ except ImportError:
 def main():
     
     n_nets = 25
-    n_n = 1000
-    n_l = 10
+    n_n = 300
+    n_l = 5
     m = 3
     allowed_aspects = 'all'
     
@@ -145,7 +145,7 @@ def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
     return graphlets.GCD_matrix(gcms)
 
 
-def example_networks(n_nets, n_n, n_l, m):
+def example_networks(n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf_plex=False, print_progress=False):
     '''
     Generates a test set of networks.
     
@@ -198,24 +198,40 @@ def example_networks(n_nets, n_n, n_l, m):
         net = ba_independent_multiplex(n_n, ms, couplings=None)
         ba.append(net)
         ba_names.append('ba_'+str(i))
+    if print_progress:
+        print('ba done')
     
     # ba plex
     for i in range(n_nets):
         net = pymnet.models.ba_total_degree(n_n, ms)
         ba_plex.append(net)
         ba_plex_names.append('ba_plex_' + str(i))
+    if print_progress:
+        print('ba plex done')
     
     # conf
     for i in range(n_nets):
-        net = conf_independent_multiplex(ba[i])
+        if use_simple_conf:
+            net = conf_independent_multiplex(ba[i])
+        else:
+            net = pymnet.models.conf(ba[i],couplings=None)
+            # a small hack to properly set couplings
+            net.couplings = [('none',)]
         conf.append(net)
         conf_names.append('conf_'+str(i))
+    if print_progress:
+        print('conf done')
     
     # conf plex
     for i in range(n_nets):
-        net = simple_conf_overlaps(ba_plex[i])
+        if use_simple_conf_plex:
+            net = simple_conf_overlaps(ba_plex[i])
+        else:
+            net = pymnet.models.conf_overlaps(get_overlap_degs(ba[i]))
         conf_plex.append(net)
         conf_plex_names.append('conf_plex_'+str(i))
+    if print_progress:
+        print('conf plex done')
     
     # er 0 and er 20
     net0 = ba_plex[0]
@@ -228,7 +244,6 @@ def example_networks(n_nets, n_n, n_l, m):
         for layer_comb in itertools.combinations(layers, nl):
             ps0[layer_comb] = 0.0
             ps20[layer_comb] = 0.2
-            
     for i in range(n_nets):
         net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e, ps0)
         er_0.append(net)
@@ -237,6 +252,8 @@ def example_networks(n_nets, n_n, n_l, m):
         net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e, ps20)
         er_20.append(net)
         er_20_names.append('er_20_' + str(i))
+    if print_progress:
+        print('er 0 and er 20 done')
     
     # geo
     for i in range(n_nets):
@@ -244,11 +261,17 @@ def example_networks(n_nets, n_n, n_l, m):
         net = pymnet.models.geo(n_n, [geo_edge_number]*n_l)
         geo.append(net)
         geo_names.append('geo_'+str(i))
+    if print_progress:
+        print('geo done')
     
-    # ws: check what the number of edges should be! Now its made so that m = number of connected nearest neighbors parameter of ws
+    # ws
     for i in range(n_nets):
-        ws.append(pymnet.models.ws(n_n,[(m/2.0)*n_n]*n_l))
+        ws_edge_number = n_n*m # number of edges
+        net = pymnet.models.ws(n_n,[ws_edge_number]*n_l,p=0.3)
+        ws.append(net)
         ws_names.append('ws_'+str(i))
+    if print_progress:
+        print('ws done')
     
     # conf degs should be based on ba and conf plex degs should be based on ba plex degs (?) -> normal ba needs to be implemented
     # what is the approximate edge density in geo?
