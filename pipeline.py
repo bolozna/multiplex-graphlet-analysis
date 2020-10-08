@@ -28,9 +28,12 @@ def main():
     n_n = 300
     n_l = 5
     m = 3
+    use_simple_conf=False
+    use_simple_conf_plex=True
+    print_progress=True
     allowed_aspects = 'all'
     
-    networks, net_names, boundaries, labels = example_networks(n_nets, n_n, n_l, m)
+    networks, net_names, boundaries, labels = example_networks(n_nets, n_n, n_l, m, use_simple_conf, use_simple_conf_plex, print_progress)
     
     directory = 'Results'
     if not os.path.exists(directory):
@@ -56,7 +59,9 @@ def main():
         
         for net, name in zip(networks, net_names):
             
-            interface.graphlet_degree_distributions(net,n,n_l,save_name='interface_'+name)            
+            # below: interface function for doing all of this, should work but maybe needs a test
+            # TODO: test and use the interface instead to simplify this code
+            #interface.graphlet_degree_distributions(net,n,n_l,save_name='interface_'+name)
             
             o_dir = directory + '/' + name + '_' + str(n_l)
             if not os.path.exists(o_dir):
@@ -81,6 +86,9 @@ def main():
                 f_name += '.txt'
                 write_orbit_counts(orbits, f_name, nodes, orbit_list)
         
+        if print_progress:
+            print('Orbits '+str(n_l)+' layers, '+str(n)+' nodes done')
+    
     end = time.time()
     print(end - start)
     
@@ -107,10 +115,15 @@ def main():
             net_layers = list(range(n_l))
         gcds = data_analysis.GCDs(net_names, n, n_l, net_layers, res_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects)
         all_gcds[(n_l, n, r)] = gcds
+        
+        if print_progress:
+            print('GCDs '+str(n_l)+' layers, '+str(n)+' nodes done')
     
     if DPK_available:
         all_gcds[('DPK','','')] = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks)
-        
+        if print_progress:
+            print('GCDs DPK method done')
+    
     end = time.time()
     print(end - start)
     
