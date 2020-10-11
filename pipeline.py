@@ -24,10 +24,10 @@ except ImportError:
 
 def main():
     
-    n_nets = 25
-    n_n = 300
-    n_l = 5
-    m = 3
+    n_nets = 10
+    n_n = 100
+    n_l = 3
+    m = 2
     use_simple_conf=False
     use_simple_conf_plex=True
     print_progress=True
@@ -88,7 +88,7 @@ def main():
             
             count = 1
             if print_progress:
-                print('['+'█'*count+' '*(len(networks)-count)+']')
+                print('+'*count+'-'*(len(networks)-count))
             count += 1
         
         if print_progress:
