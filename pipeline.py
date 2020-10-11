@@ -57,6 +57,7 @@ def main():
         orbit_list = graphlets.ordered_orbit_list(orbit_is)
         orbit_lists[n_l] = orbit_list
         
+        count = 0
         for net, name in zip(networks, net_names):
             
             # below: interface function for doing all of this, should work but maybe needs a test
@@ -86,10 +87,9 @@ def main():
                 f_name += '.txt'
                 write_orbit_counts(orbits, f_name, nodes, orbit_list)
             
-            count = 1
+            count += 1
             if print_progress:
                 print('+'*count+'-'*(len(networks)-count))
-            count += 1
         
         if print_progress:
             print('Orbits '+str(n_l)+' layers, '+str(n)+' nodes done')
