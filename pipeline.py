@@ -85,6 +85,11 @@ def main():
                     f_name += "_" + str(layer)
                 f_name += '.txt'
                 write_orbit_counts(orbits, f_name, nodes, orbit_list)
+            
+            count = 1
+            if print_progress:
+                print('['+'█'*count+' '*(len(networks)-count)+']')
+            count += 1
         
         if print_progress:
             print('Orbits '+str(n_l)+' layers, '+str(n)+' nodes done')
