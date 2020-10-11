@@ -3,6 +3,15 @@ import random
 import math
 import pymnet
 
+def insert_random_graphlets(M_list,nnodes,nlayers,number_of_graphlets,amounts,allowed_aspects='all'):
+    all_graphlets,invs = pymnet.graphlets.graphlets(nnodes,list(range(nlayers)),couplings=None,allowed_aspects=allowed_aspects)
+    random_graphlets = set()
+    while len(random_graphlets) < number_of_graphlets:
+        random_graphlets.add(random.choice(all_graphlets[nnodes]))
+    for M in M_list:
+        for ii,graphlet in enumerate(random_graphlets):
+            insert_graphlet(M,graphlet,amounts[ii])
+
 def insert_graphlet(M,graphlet,amount):
     ntot = len(M.slices[0])
     ltot = len(M.slices[1])
