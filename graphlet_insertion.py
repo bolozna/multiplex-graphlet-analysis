@@ -19,6 +19,9 @@ def insert_graphlet(M,graphlet,amount):
         insert_graphlet_into_loc(insertion_loc,M,graphlet,rng)
     
 def insert_graphlet_into_loc((sn,sl),M,graphlet,rng):
+    # unfreeze sn and sl
+    sn = set(sn)
+    sl = set(sl)
     # make sure this works with any couplings
     edges_init = set(pymnet.subnet(M,sn,sl).edges)
     mapping_nodes = dict()
@@ -51,7 +54,6 @@ def sample_insertion_locs(nnodes,nlayers,nsamples,M,rng):
             sn.add(rng.choice(nodes))
         while len(sl) < nlayers:
             sl.add(rng.choice(layers))
-        sample.add((sn,sl))
+        sample.add((frozenset(sn),frozenset(sl)))
     return sample
 
-  
