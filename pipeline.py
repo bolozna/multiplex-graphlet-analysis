@@ -56,6 +56,8 @@ def main():
         orbit_is_d[n_l] = orbit_is
         orbit_list = graphlets.ordered_orbit_list(orbit_is)
         orbit_lists[n_l] = orbit_list
+        if print_progress:
+            print('Orbit list '+str(n_l)+' layers, '+str(n)+' nodes done')
         
         count = 0
         for net, name in zip(networks, net_names):
@@ -92,7 +94,7 @@ def main():
                 print('+'*count+'-'*(len(networks)-count))
         
         if print_progress:
-            print('Orbits '+str(n_l)+' layers, '+str(n)+' nodes done')
+            print('Orbit counts '+str(n_l)+' layers, '+str(n)+' nodes done')
     
     end = time.time()
     print(end - start)
