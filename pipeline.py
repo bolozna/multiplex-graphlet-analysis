@@ -13,7 +13,7 @@ from matplotlib.ticker import NullFormatter
 from collections import defaultdict as dd
 from scipy.stats import spearmanr
 import interface
-import pickle
+import cPickle
 
 # try importing Dimitrova, Petrovski, Kocarev method
 try:
@@ -149,6 +149,22 @@ def main():
         #auprs = pairwise_auprs(gcds, boundaries, labels, title)
         #fig = plot_AUPRs(auprs, labels=labels, title=title)
         #fig.savefig('pairwise_auprs_1_'+title+'.pdf',bbox_inches='tight')
+
+def make_networks(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,print_progress=True):
+    networks, net_names, boundaries, labels = example_networks(n_nets, n_n, n_l, m, use_simple_conf, use_simple_conf_plex, print_progress)
+    savedir = 'Nets/'
+    if not os.path.exists(savedir):
+        os.makedirs(savedir)
+    with open(savedir+'_'.join(['networks',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','wb') as f:
+        cPickle.dump(networks,f)
+    with open(savedir+'_'.join(['netnames',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','wb') as g:
+        cPickle.dump(net_names,g)
+    with open(savedir+'_'.join(['boundaries',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','wb') as h:
+        cPickle.dump(boundaries,h)
+    with open(savedir+'_'.join(['labels',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','wb') as j:
+        cPickle.dump(labels,j)
+    return networks,net_names,boundaries,labels
+
 
 
 def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
