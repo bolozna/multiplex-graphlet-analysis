@@ -8,7 +8,7 @@ import numpy as np
 import random
 import seaborn as sns
 import matplotlib.pyplot as plt
-#from sklearn import manifold
+from sklearn import manifold
 from matplotlib.ticker import NullFormatter
 from collections import defaultdict as dd
 from scipy.stats import spearmanr
@@ -290,6 +290,8 @@ def make_figures(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_c
     with open(gcd_dir+'_'.join(['all_gcds',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'.pickle','rb') as h:
         all_gcds = cPickle.load(h)
     fig_dir = 'Figures/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    if not os.path.exists(fig_dir):
+        os.makedirs(fig_dir)
     dist_name = 'GCD'
     fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name)
     fig.savefig(fig_dir+'precision_recall.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
