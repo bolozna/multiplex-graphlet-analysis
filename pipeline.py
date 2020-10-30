@@ -132,7 +132,7 @@ def main():
         if print_progress:
             print('GCDs DPK method done')
             
-    pickle.dump(all_gcds,open('all_gcds_3.pickle','wb'))
+    cPickle.dump(all_gcds,open('all_gcds_3.pickle','wb'))
     
     end = time.time()
     print(end - start)
