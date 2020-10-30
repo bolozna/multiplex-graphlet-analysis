@@ -176,41 +176,44 @@ def make_orbits(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_co
     orbit_dir = 'Orbits/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
     if not os.path.exists(orbit_dir):
         os.makedirs(orbit_dir)
+    orbit_aux_dir = 'Orbits_aux/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    if not os.path.exists(orbit_aux_dir):
+        os.makedirs(orbit_aux_dir)
     layers = list(range(n_l))
     orbit_lists = {}
     orbit_is_d = {}
     start = time.time()
     nn_nl = [(1,4), (2,4), (3,3)]
-    for n_l, n in nn_nl:
-        if n_l == 1:
+    for n_l_orbit, n in nn_nl:
+        if n_l_orbit == 1:
             net_layers = [0]
         else:
             net_layers = layers
-        nets, invs = graphlets.graphlets(n, net_layers, n_l, allowed_aspects=allowed_aspects)
+        nets, invs = graphlets.graphlets(n, net_layers, n_l_orbit, allowed_aspects=allowed_aspects)
         auts = graphlets.automorphism_orbits(nets, allowed_aspects=allowed_aspects)
         orbit_is = graphlets.orbit_numbers(n, nets, auts)
-        orbit_is_d[n_l] = orbit_is
+        orbit_is_d[n_l_orbit] = orbit_is
         orbit_list = graphlets.ordered_orbit_list(orbit_is)
-        orbit_lists[n_l] = orbit_list
+        orbit_lists[n_l_orbit] = orbit_list
         if print_progress:
-            print('Orbit list '+str(n_l)+' layers, '+str(n)+' nodes done')
+            print('Orbit list '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
         count = 0
         for net, name in zip(networks, net_names):
             # below: interface function for doing all of this, should work but maybe needs a test
             # TODO: test and use the interface instead to simplify this code, fix save_name
-            #interface.graphlet_degree_distributions(net,n,n_l,save_name='interface_'+name)
-            o_dir = orbit_dir + '/' + name + '_' + str(n_l)
+            #interface.graphlet_degree_distributions(net,n,n_l_orbit,save_name='interface_'+name)
+            o_dir = orbit_dir + '/' + name + '_' + str(n_l_orbit)
             if not os.path.exists(o_dir):
                 os.makedirs(o_dir)
             nodes = net.slices[0]
-            if n_l == 1:
+            if n_l_orbit == 1:
                 agg_net = pymnet.MultiplexNetwork()
                 for node in nodes:
                     agg_net.add_node(node)
                 for e in net.edges:
                     agg_net[e[0], e[1], 0] = 1
                 net = agg_net
-            for layer_comb in itertools.combinations(net_layers, n_l):
+            for layer_comb in itertools.combinations(net_layers, n_l_orbit):
                 sub_net = pymnet.subnet(net, nodes, layer_comb)
                 orbits = graphlets.orbit_counts_all(sub_net, n, nets, invs, auts, orbit_list, allowed_aspects=allowed_aspects)
                 f_name = o_dir + '/' + name
@@ -222,7 +225,58 @@ def make_orbits(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_co
             if print_progress:
                 print('+'*count+'-'*(len(networks)-count))
         if print_progress:
-            print('Orbit counts '+str(n_l)+' layers, '+str(n)+' nodes done')
+            print('Orbit counts '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
+    with open(orbit_aux_dir+'orbit_is_d','wb') as f:
+        cPickle.dump(orbit_is_d,f)
+    with open(orbit_aux_dir+'orbit_lists','wb') as g:
+        cPickle.dump(orbit_lists,g)
+    end = time.time()
+    print(end - start)
+
+def make_GCDs(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,print_progress=True,allowed_aspects='all'):
+    start = time.time()
+    orbit_dir = 'Orbits/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    orbit_aux_dir = 'Orbits_aux/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    netdir = 'Nets/'
+    with open(netdir+'_'.join(['netnames',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as f:
+        net_names = cPickle.load(f)
+    with open(orbit_aux_dir+'orbit_is_d','rb') as g:
+        orbit_is_d = cPickle.load(g)
+    with open(orbit_aux_dir+'orbit_lists','rb') as h:
+        orbit_lists = cPickle.load(h)
+    gcd_dir = 'GCDs/'
+    if not os.path.exists(gcd_dir):
+        os.makedirs(gcd_dir)
+    layers = list(range(n_l))
+    all_gcds = {}
+    nn_nls = [(1,4), (1,3), (2,4), (2,3), (3,3)]
+    rs = ['', 'R']
+    for nn_nl, r in itertools.product(nn_nls, rs):
+        n_l_orbit, n = nn_nl
+        if r == 'R':
+            no_reds = True
+        else:
+            no_reds = False
+        orbit_list = orbit_lists[n_l_orbit]
+        orbit_is = orbit_is_d[n_l_orbit]
+        if n_l_orbit == 1:
+            net_layers = [0]
+        elif allowed_aspects == [0]:
+            net_layers = layers
+        else:
+            net_layers = list(range(n_l_orbit))
+        gcds = data_analysis.GCDs(net_names, n, n_l_orbit, net_layers, orbit_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects)
+        all_gcds[(n_l_orbit, n, r)] = gcds
+        if print_progress:
+            print('GCDs '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
+    if DPK_available:
+        with open(netdir+'_'.join(['networks',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as j:
+            networks = cPickle.load(j)
+        all_gcds[('DPK','','')] = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks)
+        if print_progress:
+            print('GCDs DPK method done')
+    with open(gcd_dir+'_'.join(['all_gcds',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'.pickle','wb') as k:
+        cPickle.dump(all_gcds,k)
     end = time.time()
     print(end - start)
 
