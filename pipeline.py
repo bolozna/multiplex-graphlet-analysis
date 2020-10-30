@@ -8,11 +8,12 @@ import numpy as np
 import random
 import seaborn as sns
 import matplotlib.pyplot as plt
-from sklearn import manifold
+#from sklearn import manifold
 from matplotlib.ticker import NullFormatter
 from collections import defaultdict as dd
 from scipy.stats import spearmanr
 import interface
+import pickle
 
 # try importing Dimitrova, Petrovski, Kocarev method
 try:
@@ -25,7 +26,7 @@ except ImportError:
 def main():
     
     n_nets = 10
-    n_n = 100
+    n_n = 1000
     n_l = 3
     m = 2
     use_simple_conf=False
@@ -35,7 +36,7 @@ def main():
     
     networks, net_names, boundaries, labels = example_networks(n_nets, n_n, n_l, m, use_simple_conf, use_simple_conf_plex, print_progress)
     
-    directory = 'Results'
+    directory = 'Results_3'
     if not os.path.exists(directory):
         os.makedirs(directory)
     
@@ -130,21 +131,24 @@ def main():
         all_gcds[('DPK','','')] = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks)
         if print_progress:
             print('GCDs DPK method done')
+            
+    pickle.dump(all_gcds,open('all_gcds_3.pickle','wb'))
     
     end = time.time()
     print(end - start)
     
     dist_name = 'GCD'
     fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name)
-    fig.savefig('precision_recall_1.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
+    fig.savefig('precision_recall_3.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
     for n_l, n, r in all_gcds:
-        gcds = all_gcds[(n_l, n, r)]
-        title = dist_name + '-' + str(n_l) + '-' + str(n) + r
-        fig,lgd = MDS_plot(gcds, boundaries, labels, title)
-        fig.savefig('mds_1_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
-        auprs = pairwise_auprs(gcds, boundaries, labels, title)
-        fig = plot_AUPRs(auprs, labels=labels, title=title)
-        fig.savefig('pairwise_auprs_1_'+title+'.pdf',bbox_inches='tight')
+        pass
+        #gcds = all_gcds[(n_l, n, r)]
+        #title = dist_name + '-' + str(n_l) + '-' + str(n) + r
+        #fig,lgd = MDS_plot(gcds, boundaries, labels, title)
+        #fig.savefig('mds_1_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
+        #auprs = pairwise_auprs(gcds, boundaries, labels, title)
+        #fig = plot_AUPRs(auprs, labels=labels, title=title)
+        #fig.savefig('pairwise_auprs_1_'+title+'.pdf',bbox_inches='tight')
 
 
 def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
