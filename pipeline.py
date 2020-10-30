@@ -293,7 +293,7 @@ def make_figures(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_c
     if not os.path.exists(fig_dir):
         os.makedirs(fig_dir)
     dist_name = 'GCD'
-    fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name)
+    fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name, fig_dir+dist_name+'_AUPRs.txt')
     fig.savefig(fig_dir+'precision_recall.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
     plt.close(fig)
     for n_l, n, r in all_gcds:
@@ -550,7 +550,7 @@ def simple_conf_overlaps(M):
     return M_conf_overlap
 
 
-def precision_recall_plot(all_dists, boundaries, dist_name=''):
+def precision_recall_plot(all_dists, boundaries, dist_name='', AUPR_writefilename=None):
     '''
     Plots the Precision-Recall curves and computes the AUPR values
     
@@ -582,6 +582,9 @@ def precision_recall_plot(all_dists, boundaries, dist_name=''):
     
     groups = group_labels(boundaries)
     
+    if AUPR_writefilename != None:
+        f = open(AUPR_writefilename,'w')
+    
     pr_fig = plt.figure()
     ax = plt.subplot(111)
     for n_l, n, r in types:
@@ -594,6 +597,10 @@ def precision_recall_plot(all_dists, boundaries, dist_name=''):
             ax.plot(recs, pres, color=color, linestyle=linestyle, label=label, linewidth=1.5)
             aupr = data_analysis.area_under_precision_recall(pres, recs)
             print('AUPR ' + label + ': ' + str(aupr))
+            if AUPR_writefilename != None:
+                f.write('AUPR ' + label + ': ' + str(aupr)+'\n')
+    if AUPR_writefilename != None:
+        f.close()
         
     ax.set_xlabel('Recall')
     ax.set_ylabel('Precision')
