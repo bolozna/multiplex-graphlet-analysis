@@ -280,6 +280,31 @@ def make_GCDs(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf
     end = time.time()
     print(end - start)
 
+def make_figures(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,print_progress=True,allowed_aspects='all'):
+    netdir = 'Nets/'
+    with open(netdir+'_'.join(['boundaries',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as f:
+        boundaries = cPickle.load(f)
+    with open(netdir+'_'.join(['labels',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as g:
+        labels = cPickle.load(g)
+    gcd_dir = 'GCDs/'
+    with open(gcd_dir+'_'.join(['all_gcds',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'.pickle','rb') as h:
+        all_gcds = cPickle.load(h)
+    fig_dir = 'Figures/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    dist_name = 'GCD'
+    fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name)
+    fig.savefig(fig_dir+'precision_recall.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
+    plt.close(fig)
+    for n_l, n, r in all_gcds:
+        gcds = all_gcds[(n_l, n, r)]
+        title = dist_name + '-' + str(n_l) + '-' + str(n) + r
+        fig,lgd = MDS_plot(gcds, boundaries, labels, title)
+        fig.savefig(fig_dir+'mds_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
+        plt.close(fig)
+        auprs = pairwise_auprs(gcds, boundaries, labels, title)
+        fig = plot_AUPRs(auprs, labels=labels, title=title)
+        fig.savefig(fig_dir+'pairwise_auprs_'+title+'.pdf',bbox_inches='tight')
+        plt.close(fig)
+
 
 
 def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
