@@ -310,7 +310,7 @@ def make_figures(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_c
 
 
 def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
-    orb_mats = []
+    gcms = []
     for M in networks:
         assert isinstance(M,pymnet.MultiplexNetwork)
         graph_edges = [(e[0],e[1],e[2]) for e in M.edges if e[2]==e[3]]
@@ -319,9 +319,7 @@ def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
         graphF.make_direct_neighbours(subOne=False)
         graphF.make_zero_orbit()
         graphF.count_tri_graphs()
-        orb_mats.append(graphF.return_orbits_Mat().values)
-    gcms = []
-    for orb_mat in orb_mats:
+        orb_mat = graphF.return_orbits_Mat().values
         orb_mat_with_dummy = np.row_stack((orb_mat,[1]*orb_mat.shape[1]))
         gcms.append(spearmanr(orb_mat_with_dummy)[0])
     return graphlets.GCD_matrix(gcms)
