@@ -480,6 +480,8 @@ def ba_independent_multiplex(n, ms, couplings=None):
     return net
 
 def ba_single_layer(n,m):
+    # seed network is full net with m+1 nodes
+    # the number of edges is thus n*m-0.5*m-0.5*m**2
     net = pymnet.full(nodes=m+1,layers=None)
     rng = random.Random()
     stubs = list(range(m+1))*m
