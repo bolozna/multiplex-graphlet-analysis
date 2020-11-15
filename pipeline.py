@@ -268,27 +268,27 @@ def make_gcds(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf
             net_layers = layers
         else:
             net_layers = list(range(n_l_orbit))
-        orbit_aux_savename = gcd_aux_dir+'_'.join(filter(None,[str(n_l_orbit),str(n),str(r)]))+'.pickle'
-        if os.path.exists(orbit_aux_savename):
-            with open(orbit_aux_savename,'rb') as aux_f:
+        gcd_aux_savename = gcd_aux_dir+'_'.join(filter(None,[str(n_l_orbit),str(n),str(r)]))+'.pickle'
+        if os.path.exists(gcd_aux_savename):
+            with open(gcd_aux_savename,'rb') as aux_f:
                 gcds = cPickle.load(aux_f)
         else:
             gcds = data_analysis.GCDs(net_names, n, n_l_orbit, net_layers, orbit_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects)
-            with open(orbit_aux_savename,'wb') as aux_g:
+            with open(gcd_aux_savename,'wb') as aux_g:
                 cPickle.dump(gcds,aux_g)
         all_gcds[(n_l_orbit, n, r)] = gcds
         if print_progress:
             print('GCDs '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
     if DPK_available:
-        orbit_aux_savename = gcd_aux_dir+'DPK'+'.pickle'
-        if os.path.exists(orbit_aux_savename):
-            with open(orbit_aux_savename,'rb') as aux_h:
+        gcd_aux_savename = gcd_aux_dir+'DPK'+'.pickle'
+        if os.path.exists(gcd_aux_savename):
+            with open(gcd_aux_savename,'rb') as aux_h:
                 gcds = cPickle.load(aux_h)
         else:
             with open(netdir+'_'.join(['networks',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as j:
                 networks = cPickle.load(j)
             gcds = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks)
-            with open(orbit_aux_savename,'wb') as aux_j:
+            with open(gcd_aux_savename,'wb') as aux_j:
                 cPickle.dump(gcds,aux_j)
         all_gcds[('DPK','','')] = gcds
         if print_progress:
