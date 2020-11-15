@@ -281,13 +281,14 @@ def make_gcds(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf
             print('GCDs '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
     if DPK_available:
         gcd_aux_savename = gcd_aux_dir+'DPK'+'.pickle'
+        dpk_aux_dir = gcd_aux_dir+'DPK_GCMs/'
         if os.path.exists(gcd_aux_savename):
             with open(gcd_aux_savename,'rb') as aux_h:
                 gcds = cPickle.load(aux_h)
         else:
             with open(netdir+'_'.join(['networks',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as j:
                 networks = cPickle.load(j)
-            gcds = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks)
+            gcds = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks,dpk_aux_dir)
             with open(gcd_aux_savename,'wb') as aux_j:
                 cPickle.dump(gcds,aux_j)
         all_gcds[('DPK','','')] = gcds
@@ -327,20 +328,30 @@ def make_figures(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_c
 
 
 
-def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
-    gcms = []
-    for M in networks:
-        assert isinstance(M,pymnet.MultiplexNetwork)
-        graph_edges = [(e[0],e[1],e[2]) for e in M.edges if e[2]==e[3]]
-        graphF = Multiplex_Graph.GraphFunc(doDirected=False)
-        graphF.make_graph_table(graph_edges)
-        graphF.make_direct_neighbours(subOne=False)
-        graphF.make_zero_orbit()
-        graphF.count_tri_graphs()
-        orb_mat = graphF.return_orbits_Mat().values
-        orb_mat_with_dummy = np.row_stack((orb_mat,[1]*orb_mat.shape[1]))
-        gcms.append(spearmanr(orb_mat_with_dummy)[0])
-    return graphlets.GCD_matrix(gcms)
+def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks,aux_folder):
+    gcm_file_names = []
+    if not os.path.exists(aux_folder):
+        os.makedirs(aux_folder)
+    for ii,M in enumerate(networks):
+        gcm_file_name = aux_folder+str(ii)+'.pickle'
+        if os.path.exists(gcm_file_name):
+            gcm_file_names.append(gcm_file_name)
+        else:
+            assert isinstance(M,pymnet.MultiplexNetwork)
+            graph_edges = [(e[0],e[1],e[2]) for e in M.edges if e[2]==e[3]]
+            graphF = Multiplex_Graph.GraphFunc(doDirected=False)
+            graphF.make_graph_table(graph_edges)
+            graphF.make_direct_neighbours(subOne=False)
+            graphF.make_zero_orbit()
+            graphF.count_tri_graphs()
+            orb_mat = graphF.return_orbits_Mat().values
+            orb_mat_with_dummy = np.row_stack((orb_mat,[1]*orb_mat.shape[1]))
+            gcm = spearmanr(orb_mat_with_dummy)[0]
+            with open(gcm_file_name,'wb') as f:
+                cPickle.dump(gcm,f)
+            gcm_file_names.append(gcm_file_name)
+            del gcm
+    return GCD_matrix_save_memory(gcm_file_names)
 
 def GCD_matrix_save_memory(gcm_file_names):
     gcds = []
