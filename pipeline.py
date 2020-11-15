@@ -342,6 +342,21 @@ def gcds_for_Dimitrova_Petrovski_Kocarev_method(networks):
         gcms.append(spearmanr(orb_mat_with_dummy)[0])
     return graphlets.GCD_matrix(gcms)
 
+def GCD_matrix_save_memory(gcm_file_names):
+    gcds = []
+    for gcm_file_1 in gcm_file_names:
+        gcds_t = []
+        with open(gcm_file_1,'rb') as f:
+            gcm1 = cPickle.load(f)
+        for gcm_file_2 in gcm_file_names:
+            with open(gcm_file_2,'rb') as g:
+                gcm2 = cPickle.load(g)
+            gcd = graphlets.GCD(gcm1,gcm2)
+            gcds_t.append(gcd)
+            del gcm2
+        gcds.append(gcds_t)
+        del gcm1
+    return gcds
 
 def example_networks(n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf_plex=False, print_progress=False):
     '''
