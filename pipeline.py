@@ -458,7 +458,9 @@ def example_networks(n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf
         print('conf plex done')
     
     # er 0 and er 20
-    n_e = n_n*m
+    n_e_0 = n_n*m
+    # n_e_20 is an empirically tested value for n_l = 3, other n_l require other values
+    n_e_20 = n_n*m*0.71
     ps0 = {}
     ps20 = {}
     layers = list(range(n_l))
@@ -467,11 +469,11 @@ def example_networks(n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf
             ps0[layer_comb] = 0.0
             ps20[layer_comb] = 0.2
     for i in range(n_nets):
-        net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e, ps0)
+        net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e_0, ps0)
         er_0.append(net)
         er_0_names.append('er_0_' + str(i))
         
-        net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e, ps20)
+        net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e_20, ps20)
         er_20.append(net)
         er_20_names.append('er_20_' + str(i))
     if print_progress:
@@ -479,7 +481,7 @@ def example_networks(n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf
     
     # geo
     for i in range(n_nets):
-        geo_edge_number = n_n*m # approximate number of edges
+        geo_edge_number = n_n*m # approximate number of edges, works better for large n_n
         net = pymnet.models.geo(n_n, [geo_edge_number]*n_l)
         geo.append(net)
         geo_names.append('geo_'+str(i))
