@@ -458,12 +458,10 @@ def example_networks(n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf
         print('conf plex done')
     
     # er 0 and er 20
-    net0 = ba_plex[0]
-    agg_net = pymnet.aggregate(net0, 1)
-    n_e = int(round(len(agg_net.edges) / float(n_l)))
+    n_e = n_n*m
     ps0 = {}
     ps20 = {}
-    layers = net0.slices[1]
+    layers = list(range(n_l))
     for nl in range(1, n_l):
         for layer_comb in itertools.combinations(layers, nl):
             ps0[layer_comb] = 0.0
