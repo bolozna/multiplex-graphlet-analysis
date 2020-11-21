@@ -457,10 +457,10 @@ def example_networks(n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf
     if print_progress:
         print('conf plex done')
     
-    # er 0 and er 20
+    # er 0 and er 20, aggregated number of edges should be n_n*m*n_l,
+    # so the edge parameter should be n_n*m
     n_e_0 = n_n*m
-    # n_e_20 is an empirically tested value for n_l = 3, other n_l require other values
-    n_e_20 = n_n*m*0.71
+    n_e_20 = n_n*m
     ps0 = {}
     ps20 = {}
     layers = list(range(n_l))
