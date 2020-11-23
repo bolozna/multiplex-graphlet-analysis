@@ -570,6 +570,8 @@ def example_networks(test_set_type, n_nets, n_n, n_l, m, use_simple_conf=False, 
             net_names.extend(curr_net_names)
             boundaries.append(n_nets*(ii+1))
             labels.append('graphlet_set'+str(ii+1))
+            if print_progress:
+                print(labels[-1]+' done')
     
     return networks, net_names, boundaries, labels
 
