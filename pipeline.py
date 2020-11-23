@@ -13,6 +13,7 @@ from matplotlib.ticker import NullFormatter
 from collections import defaultdict as dd
 from scipy.stats import spearmanr
 import interface
+import graphlet_insertion
 import cPickle
 
 # try importing Dimitrova, Petrovski, Kocarev method
@@ -150,18 +151,29 @@ def main():
         #fig = plot_AUPRs(auprs, labels=labels, title=title)
         #fig.savefig('pairwise_auprs_1_'+title+'.pdf',bbox_inches='tight')
 
-def make_networks(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,print_progress=True):
-    networks, net_names, boundaries, labels = example_networks(n_nets, n_n, n_l, m, use_simple_conf, use_simple_conf_plex, print_progress)
+def make_networks(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,allowed_aspects='all',n_classes=5,n_different_graphlets=5,graphlet_frequency=0.05,graphlet_size=(4,2),print_progress=True):
+    '''
+    test_set_type == 'random':
+        parameters used: n_nets, n_n, n_l, m, use_simple_conf, use_simple_conf_plex, print_progress
+    test_set_type == 'graphlet_insertion':
+        parameters used: n_nets, n_n, n_l, m, n_classes, n_different_graphlets, graphlet_frequency, graphlet_size, print_progress
+    See function example_networks
+    '''
+    networks, net_names, boundaries, labels = example_networks(test_set_type,n_nets,n_n,n_l,m,use_simple_conf,use_simple_conf_plex,allowed_aspects,n_classes,n_different_graphlets,graphlet_frequency,graphlet_size,print_progress)
     savedir = 'Nets/'
     if not os.path.exists(savedir):
         os.makedirs(savedir)
-    with open(savedir+'_'.join(['networks',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','wb') as f:
+    if test_set_type == 'random':
+        savename_addition = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+    elif test_set_type == 'graphlet_insertion':
+        savename_addition = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
+    with open(savedir+'networks_'+savename_addition+'.pickle','wb') as f:
         cPickle.dump(networks,f)
-    with open(savedir+'_'.join(['netnames',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','wb') as g:
+    with open(savedir+'netnames_'+savename_addition+'.pickle','wb') as g:
         cPickle.dump(net_names,g)
-    with open(savedir+'_'.join(['boundaries',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','wb') as h:
+    with open(savedir+'boundaries_'+savename_addition+'.pickle','wb') as h:
         cPickle.dump(boundaries,h)
-    with open(savedir+'_'.join(['labels',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','wb') as j:
+    with open(savedir+'labels_'+savename_addition+'.pickle','wb') as j:
         cPickle.dump(labels,j)
     return networks,net_names,boundaries,labels
 
@@ -369,20 +381,47 @@ def GCD_matrix_save_memory(gcm_file_names):
         del gcm1
     return gcds
 
-def example_networks(n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf_plex=False, print_progress=False):
+def example_networks(test_set_type, n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf_plex=False, allowed_aspects='all', n_classes=5, n_different_graphlets=5, graphlet_frequency=0.05, graphlet_size=(4,2), print_progress=False):
     '''
     Generates a test set of networks.
     
     Parameters
     ----------
+    test_set_type : 'random' or 'graphlet_insertion'
+        Determines whether random network models or the graphlet insertion method is used in creating the test set
     n_nets : int
-        Number of networks generated from each model.
+        Number of networks generated from each model / number of networks in each graphlet insertion set
+        Used in both test set types
     n_n : int
         Number of nodes in each network
+        Used in both test set types
     n_l : int
         Number of layers in each network
+        Used in both test set types
     m : int
         Number of edges added to each new node in each layer in the BA model
+        Used in both test set types
+    use_simple_conf : bool
+        Is the simplified conf net model used
+        Used only in test set type random
+    use_simple_conf_plex : bool
+        Is the simplified conf plex net model used
+        Used only in test set type random
+    allowed_aspects : 'all' or list of aspects
+        Allowed permutable aspects for determining the set of all possible graphlets
+        Used only in test set type graphlet insertion
+    n_classes : int
+        Number of classes of nets with different inserted graphlets
+        Used only in test set type graphlet insertion
+    n_different_graphlets : int
+        Number of inserted graphlets
+        Used only in test set type graphlet insertion
+    graphlet_frequency : float
+        Proportion of inserted graphlets out of all possible locations
+        Used only in test set type graphlet insertion
+    graphlet_size : tuple
+        Size of inserted graphlets (nnodes,nlayers)
+        Used only in test set type graphlet insertion
         
     Returns
     -------
@@ -399,118 +438,138 @@ def example_networks(n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf
     
     ms = [m] * n_l
     
-    ba = []
-    ba_plex = []
-    conf = []
-    conf_plex = []
-    er_0 = []
-    er_20 = []
-    geo = []
-    ws = []
-    
-    ba_names = []
-    ba_plex_names = []
-    conf_names = []
-    conf_plex_names = []
-    er_0_names = []
-    er_20_names = []
-    geo_names = []
-    ws_names = []
-    
-    # ba
-    for i in range(n_nets):
-        net = ba_independent_multiplex(n_n, ms, couplings=None)
-        ba.append(net)
-        ba_names.append('ba_'+str(i))
-    if print_progress:
-        print('ba done')
-    
-    # ba plex
-    for i in range(n_nets):
-        net = pymnet.models.ba_total_degree(n_n, ms)
-        ba_plex.append(net)
-        ba_plex_names.append('ba_plex_' + str(i))
-    if print_progress:
-        print('ba plex done')
-    
-    # conf
-    for i in range(n_nets):
-        if use_simple_conf:
-            net = conf_independent_multiplex(ba[i])
-        else:
-            net = pymnet.models.conf(ba[i],couplings=None)
-            # a small hack to properly set couplings
-            net.couplings = [('none',)]
-        conf.append(net)
-        conf_names.append('conf_'+str(i))
-    if print_progress:
-        print('conf done')
-    
-    # conf plex
-    for i in range(n_nets):
-        if use_simple_conf_plex:
-            net = simple_conf_overlaps(ba_plex[i])
-        else:
-            net = pymnet.models.conf_overlaps(get_overlap_degs(ba[i]))
-        conf_plex.append(net)
-        conf_plex_names.append('conf_plex_'+str(i))
-    if print_progress:
-        print('conf plex done')
-    
-    # er 0 and er 20, aggregated number of edges should be n_n*m*n_l,
-    # so the edge parameter should be n_n*m
-    n_e_0 = n_n*m
-    n_e_20 = n_n*m
-    ps0 = {}
-    ps20 = {}
-    layers = list(range(n_l))
-    for nl in range(1, n_l):
-        for layer_comb in itertools.combinations(layers, nl):
-            ps0[layer_comb] = 0.0
-            ps20[layer_comb] = 0.2
-    for i in range(n_nets):
-        net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e_0, ps0)
-        er_0.append(net)
-        er_0_names.append('er_0_' + str(i))
+    if test_set_type == 'random':
         
-        net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e_20, ps20)
-        er_20.append(net)
-        er_20_names.append('er_20_' + str(i))
-    if print_progress:
-        print('er 0 and er 20 done')
+        ba = []
+        ba_plex = []
+        conf = []
+        conf_plex = []
+        er_0 = []
+        er_20 = []
+        geo = []
+        ws = []
+        
+        ba_names = []
+        ba_plex_names = []
+        conf_names = []
+        conf_plex_names = []
+        er_0_names = []
+        er_20_names = []
+        geo_names = []
+        ws_names = []
+        
+        # ba
+        for i in range(n_nets):
+            net = ba_independent_multiplex(n_n, ms, couplings=None)
+            ba.append(net)
+            ba_names.append('ba_'+str(i))
+        if print_progress:
+            print('ba done')
+        
+        # ba plex
+        for i in range(n_nets):
+            net = pymnet.models.ba_total_degree(n_n, ms)
+            ba_plex.append(net)
+            ba_plex_names.append('ba_plex_' + str(i))
+        if print_progress:
+            print('ba plex done')
+        
+        # conf
+        for i in range(n_nets):
+            if use_simple_conf:
+                net = conf_independent_multiplex(ba[i])
+            else:
+                net = pymnet.models.conf(ba[i],couplings=None)
+                # a small hack to properly set couplings
+                net.couplings = [('none',)]
+            conf.append(net)
+            conf_names.append('conf_'+str(i))
+        if print_progress:
+            print('conf done')
+        
+        # conf plex
+        for i in range(n_nets):
+            if use_simple_conf_plex:
+                net = simple_conf_overlaps(ba_plex[i])
+            else:
+                net = pymnet.models.conf_overlaps(get_overlap_degs(ba[i]))
+            conf_plex.append(net)
+            conf_plex_names.append('conf_plex_'+str(i))
+        if print_progress:
+            print('conf plex done')
+        
+        # er 0 and er 20, aggregated number of edges should be n_n*m*n_l,
+        # so the edge parameter should be n_n*m
+        n_e_0 = n_n*m
+        n_e_20 = n_n*m
+        ps0 = {}
+        ps20 = {}
+        layers = list(range(n_l))
+        for nl in range(1, n_l):
+            for layer_comb in itertools.combinations(layers, nl):
+                ps0[layer_comb] = 0.0
+                ps20[layer_comb] = 0.2
+        for i in range(n_nets):
+            net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e_0, ps0)
+            er_0.append(net)
+            er_0_names.append('er_0_' + str(i))
+            
+            net = pymnet.models.er_overlaps_match_aggregated(n_n, n_e_20, ps20)
+            er_20.append(net)
+            er_20_names.append('er_20_' + str(i))
+        if print_progress:
+            print('er 0 and er 20 done')
+        
+        # geo
+        for i in range(n_nets):
+            geo_edge_number = n_n*m # approximate number of edges, works better for large n_n
+            net = pymnet.models.geo(n_n, [geo_edge_number]*n_l)
+            geo.append(net)
+            geo_names.append('geo_'+str(i))
+        if print_progress:
+            print('geo done')
+        
+        # ws
+        for i in range(n_nets):
+            ws_edge_number = n_n*m # number of edges
+            net = pymnet.models.ws(n_n,[ws_edge_number]*n_l,p=0.3)
+            ws.append(net)
+            ws_names.append('ws_'+str(i))
+        if print_progress:
+            print('ws done')
+        
+        # conf degs should be based on ba and conf plex degs should be based on ba plex degs (?) -> normal ba needs to be implemented
+        # what is the approximate edge density in geo?
+        # what is the starting edge number in ws? The same m as in ba?
+        # !!! what should the couplings be? !!!
+        # are the er edges per layer (n_e) calculated correctly? n_e seems to be somehow average number of edges per layer in first ba plex net (except some edges get squished by aggregation so its less actually)
+        # check edge numbers per layer: should these be the same?
+        #for n in nets:
+        #    print len([x for x in list(n.edges) if x[2] == x[3]])
     
-    # geo
-    for i in range(n_nets):
-        geo_edge_number = n_n*m # approximate number of edges, works better for large n_n
-        net = pymnet.models.geo(n_n, [geo_edge_number]*n_l)
-        geo.append(net)
-        geo_names.append('geo_'+str(i))
-    if print_progress:
-        print('geo done')
-    
-    # ws
-    for i in range(n_nets):
-        ws_edge_number = n_n*m # number of edges
-        net = pymnet.models.ws(n_n,[ws_edge_number]*n_l,p=0.3)
-        ws.append(net)
-        ws_names.append('ws_'+str(i))
-    if print_progress:
-        print('ws done')
-    
-    # conf degs should be based on ba and conf plex degs should be based on ba plex degs (?) -> normal ba needs to be implemented
-    # what is the approximate edge density in geo?
-    # what is the starting edge number in ws? The same m as in ba?
-    # !!! what should the couplings be? !!!
-    # are the er edges per layer (n_e) calculated correctly? n_e seems to be somehow average number of edges per layer in first ba plex net (except some edges get squished by aggregation so its less actually)
-    # check edge numbers per layer: should these be the same?
-    #for n in nets:
-    #    print len([x for x in list(n.edges) if x[2] == x[3]])
-
-    
-    networks = ba + ba_plex + conf + conf_plex + er_0 + er_20 + geo + ws
-    net_names = ba_names + ba_plex_names + conf_names + conf_plex_names + er_0_names + er_20_names + geo_names + ws_names
-    boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4, n_nets*5, n_nets*6, n_nets*7, n_nets*8]
-    labels = ['BA', 'BA-plex', 'conf', 'conf-plex', 'ER$_{0,0}$', 'ER$_{20,20}$', 'geo', 'WS']
+        
+        networks = ba + ba_plex + conf + conf_plex + er_0 + er_20 + geo + ws
+        net_names = ba_names + ba_plex_names + conf_names + conf_plex_names + er_0_names + er_20_names + geo_names + ws_names
+        boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4, n_nets*5, n_nets*6, n_nets*7, n_nets*8]
+        labels = ['BA', 'BA-plex', 'conf', 'conf-plex', 'ER$_{0,0}$', 'ER$_{20,20}$', 'geo', 'WS']
+        
+    elif test_set_type == 'graphlet_insertion':
+        
+        networks = []
+        net_names = []
+        boundaries = []
+        labels = []
+        for ii in range(n_classes):
+            curr_nets = []
+            curr_net_names = []
+            for jj in range(n_nets):
+                curr_nets.append(ba_independent_multiplex(n_n, ms, couplings=None))
+                curr_net_names.append('set'+str(ii)+'_'+str(jj))
+            graphlet_insertion.insert_random_graphlets(curr_nets,graphlet_size[0],graphlet_size[1],n_different_graphlets,[graphlet_frequency]*n_different_graphlets,allowed_aspects,balance=True)
+            networks.extend(curr_nets)
+            net_names.extend(curr_net_names)
+            boundaries.append(n_nets*(ii+1))
+            labels.append('graphlet_set'+str(ii+1))
     
     return networks, net_names, boundaries, labels
 
