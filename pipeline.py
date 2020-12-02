@@ -226,13 +226,14 @@ def make_orbits(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_co
                     agg_net[e[0], e[1], 0] = 1
                 net = agg_net
             for layer_comb in itertools.combinations(net_layers, n_l_orbit):
-                sub_net = pymnet.subnet(net, nodes, layer_comb)
-                orbits = graphlets.orbit_counts_all(sub_net, n, nets, invs, auts, orbit_list, allowed_aspects=allowed_aspects)
                 f_name = o_dir + '/' + name
                 for layer in layer_comb:
                     f_name += "_" + str(layer)
                 f_name += '.txt'
-                write_orbit_counts(orbits, f_name, nodes, orbit_list)
+                if not os.path.exists(f_name):
+                    sub_net = pymnet.subnet(net, nodes, layer_comb)
+                    orbits = graphlets.orbit_counts_all(sub_net, n, nets, invs, auts, orbit_list, allowed_aspects=allowed_aspects)
+                    write_orbit_counts(orbits, f_name, nodes, orbit_list)
             count += 1
             if print_progress:
                 print('+'*count+'-'*(len(networks)-count))
