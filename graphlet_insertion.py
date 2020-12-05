@@ -6,6 +6,7 @@ import pymnet
 import itertools
 
 def insert_random_graphlets(M_list,nnodes,nlayers,number_of_graphlets,amounts,allowed_aspects='all',balance=True):
+    # NB! currently only works for integer amounts because of location precomputing
     all_graphlets,invs = pymnet.graphlets.graphlets(nnodes,list(range(nlayers)),couplings=None,allowed_aspects=allowed_aspects)
     random_graphlets = set()
     while len(random_graphlets) < number_of_graphlets:
@@ -19,9 +20,15 @@ def insert_random_graphlets(M_list,nnodes,nlayers,number_of_graphlets,amounts,al
                 init_edge_numbers[l] = len(M.A[l].edges)
         else:
             forbidden_edge_locs = None
+        # precompute non-overlapping locations for each graphlet
+        rng = random.Random()
+        all_locs = list(sample_insertion_locs(nnodes,nlayers,sum(amounts),M,rng))
+        rng.shuffle(all_locs)
         # insert graphlets
         for ii,graphlet in enumerate(random_graphlets):
-            insert_graphlet(M,graphlet,amounts[ii],forbidden_edge_locs=forbidden_edge_locs)
+            precomputed_insertion_locs = all_locs[0:amounts[ii]]
+            insert_graphlet(M,graphlet,amounts[ii],forbidden_edge_locs=forbidden_edge_locs,precomputed_insertion_locs=precomputed_insertion_locs)
+            del all_locs[0:amounts[ii]]
         if balance:
             for l in M.iter_layers():
                 curr_edge_number = len(M.A[l].edges)
@@ -48,7 +55,7 @@ def insert_random_graphlets(M_list,nnodes,nlayers,number_of_graphlets,amounts,al
                             added_edges.add(tca)
                             curr_edge_number += 1
 
-def insert_graphlet(M,graphlet,amount,forbidden_edge_locs=None):
+def insert_graphlet(M,graphlet,amount,forbidden_edge_locs=None,precomputed_insertion_locs=None):
     ntot = len(M.slices[0])
     ltot = len(M.slices[1])
     n = len(graphlet.slices[0])
@@ -57,10 +64,15 @@ def insert_graphlet(M,graphlet,amount,forbidden_edge_locs=None):
         insertions = amount
     elif isinstance(amount,float):
         f = math.factorial
+        # this amount not the exact total amount because of forbidden overlaps
         total_node_layer_combinations = (f(ntot)/f(n)/f(ntot-n))*(f(ltot)/f(l)/f(ltot-l))
         insertions = int(amount*total_node_layer_combinations)
     rng = random.Random()
-    for insertion_loc in sample_insertion_locs(n,l,insertions,M,rng):
+    if precomputed_insertion_locs:
+        insertion_locs = precomputed_insertion_locs
+    else:
+        insertion_locs = sample_insertion_locs(n,l,insertions,M,rng)
+    for insertion_loc in insertion_locs:
         insert_graphlet_into_loc(insertion_loc,M,graphlet,rng)
         if forbidden_edge_locs:
             for l_insert in insertion_loc[1]:
@@ -103,6 +115,11 @@ def sample_insertion_locs(nnodes,nlayers,nsamples,M,rng):
             sn.add(rng.choice(nodes))
         while len(sl) < nlayers:
             sl.add(rng.choice(layers))
-        sample.add((frozenset(sn),frozenset(sl)))
+        # for...else structure
+        for existing_loc in sample:
+            if sn.intersection(existing_loc[0]) > 1 and sl.intersection(existing_loc[1]) > 0:
+                break
+        else:
+            sample.add((frozenset(sn),frozenset(sl)))
     return sample
 
