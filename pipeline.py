@@ -564,7 +564,9 @@ def example_networks(test_set_type, n_nets, n_n, n_l, m, use_simple_conf=False, 
             curr_nets = []
             curr_net_names = []
             for jj in range(n_nets):
-                curr_nets.append(ba_independent_multiplex(n_n, ms, couplings=None))
+                base_net = pymnet.models.er(n_n,edges=[n_n*m]*n_l)
+                base_net.couplings = [('none',)]
+                curr_nets.append(base_net)
                 curr_net_names.append('set'+str(ii)+'_'+str(jj))
             graphlet_insertion.insert_random_graphlets(curr_nets,graphlet_size[0],graphlet_size[1],n_different_graphlets,[graphlet_frequency]*n_different_graphlets,allowed_aspects,balance=True)
             networks.extend(curr_nets)
