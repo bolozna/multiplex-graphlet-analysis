@@ -124,7 +124,7 @@ def sample_insertion_locs(nnodes,nlayers,nsamples,M,rng):
             sl.add(rng.choice(layers))
         # for...else structure
         for existing_loc in sample:
-            if sn.intersection(existing_loc[0]) > 1 and sl.intersection(existing_loc[1]) > 0:
+            if len(sn.intersection(existing_loc[0])) > 1 and len(sl.intersection(existing_loc[1])) > 0:
                 break
         else:
             sample.add((frozenset(sn),frozenset(sl)))
