@@ -568,7 +568,7 @@ def example_networks(test_set_type, n_nets, n_n, n_l, m, use_simple_conf=False, 
                 base_net.couplings = [('none',)]
                 curr_nets.append(base_net)
                 curr_net_names.append('set'+str(ii)+'_'+str(jj))
-            graphlet_insertion.insert_random_graphlets(curr_nets,graphlet_size[0],graphlet_size[1],n_different_graphlets,[graphlet_frequency]*n_different_graphlets,allowed_aspects,balance=True)
+            graphlet_insertion.insert_random_graphlets(curr_nets,graphlet_size[0],graphlet_size[1],n_different_graphlets,[graphlet_frequency]*n_different_graphlets,allowed_aspects,balance=True,print_progress=print_progress)
             networks.extend(curr_nets)
             net_names.extend(curr_net_names)
             boundaries.append(n_nets*(ii+1))

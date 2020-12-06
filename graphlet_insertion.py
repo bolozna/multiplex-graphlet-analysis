@@ -5,12 +5,16 @@ import math
 import pymnet
 import itertools
 
-def insert_random_graphlets(M_list,nnodes,nlayers,number_of_graphlets,amounts,allowed_aspects='all',balance=True):
+def insert_random_graphlets(M_list,nnodes,nlayers,number_of_graphlets,amounts,allowed_aspects='all',balance=True,print_progress=True):
     # NB! currently only works for integer amounts because of location precomputing
     all_graphlets,invs = pymnet.graphlets.graphlets(nnodes,list(range(nlayers)),couplings=None,allowed_aspects=allowed_aspects)
     random_graphlets = set()
     while len(random_graphlets) < number_of_graphlets:
         random_graphlets.add(random.choice(all_graphlets[nnodes]))
+    if print_progress:
+        print('Inserting graphlets...')
+    count = 0
+    total_count = len(M_list)
     for M in M_list:
         if balance:
             forbidden_edge_locs = dict()
@@ -54,6 +58,9 @@ def insert_random_graphlets(M_list,nnodes,nlayers,number_of_graphlets,amounts,al
                             M[tca[0],tca[1],l,l] = 1
                             added_edges.add(tca)
                             curr_edge_number += 1
+        count += 1
+        if print_progress:
+                print('+'*count+'-'*(total_count-count))
 
 def insert_graphlet(M,graphlet,amount,forbidden_edge_locs=None,precomputed_insertion_locs=None):
     ntot = len(M.slices[0])
