@@ -177,18 +177,23 @@ def make_networks(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple
         cPickle.dump(labels,j)
     return networks,net_names,boundaries,labels
 
-def make_orbits(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,print_progress=True,allowed_aspects='all'):
+def make_orbits(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,allowed_aspects_graphlets='all',n_classes=5,n_different_graphlets=5,graphlet_frequency=0.05,graphlet_size=(4,2),allowed_aspects_orbits='all',print_progress=True):
     netdir = 'Nets/'
-    with open(netdir+'_'.join(['networks',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as f:
+    # prefix depending on test_set_type
+    if test_set_type == 'random':
+        file_prefix = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+    elif test_set_type == 'graphlet_insertion':
+        file_prefix = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects_graphlets),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
+    with open(netdir+'networks_'+file_prefix+'.pickle','rb') as f:
         networks = cPickle.load(f)
-    with open(netdir+'_'.join(['netnames',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as g:
+    with open(netdir+'netnames_'+file_prefix+'.pickle','rb') as g:
         net_names = cPickle.load(g)
     if print_progress:
         print('Nets loaded')
-    orbit_dir = 'Orbits/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    orbit_dir = 'Orbits/'+file_prefix+'_'+str(allowed_aspects_orbits)+'/'
     if not os.path.exists(orbit_dir):
         os.makedirs(orbit_dir)
-    orbit_aux_dir = 'Orbits_aux/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    orbit_aux_dir = 'Orbits_aux/'+file_prefix+'_'+str(allowed_aspects_orbits)+'/'
     if not os.path.exists(orbit_aux_dir):
         os.makedirs(orbit_aux_dir)
     layers = list(range(n_l))
@@ -201,8 +206,8 @@ def make_orbits(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_co
             net_layers = [0]
         else:
             net_layers = layers
-        nets, invs = graphlets.graphlets(n, net_layers, n_l_orbit, allowed_aspects=allowed_aspects)
-        auts = graphlets.automorphism_orbits(nets, allowed_aspects=allowed_aspects)
+        nets, invs = graphlets.graphlets(n, net_layers, n_l_orbit, allowed_aspects=allowed_aspects_orbits)
+        auts = graphlets.automorphism_orbits(nets, allowed_aspects=allowed_aspects_orbits)
         orbit_is = graphlets.orbit_numbers(n, nets, auts)
         orbit_is_d[n_l_orbit] = orbit_is
         orbit_list = graphlets.ordered_orbit_list(orbit_is)
@@ -232,7 +237,7 @@ def make_orbits(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_co
                 f_name += '.txt'
                 if not os.path.exists(f_name):
                     sub_net = pymnet.subnet(net, nodes, layer_comb)
-                    orbits = graphlets.orbit_counts_all(sub_net, n, nets, invs, auts, orbit_list, allowed_aspects=allowed_aspects)
+                    orbits = graphlets.orbit_counts_all(sub_net, n, nets, invs, auts, orbit_list, allowed_aspects=allowed_aspects_orbits)
                     write_orbit_counts(orbits, f_name, nodes, orbit_list)
             count += 1
             if print_progress:
