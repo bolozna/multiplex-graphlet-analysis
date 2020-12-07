@@ -316,21 +316,25 @@ def make_gcds(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_con
         all_gcds[('DPK','','')] = gcds
         if print_progress:
             print('GCDs DPK method done')
-    with open(gcd_dir+'all_gcds_'+file_prefix+str(allowed_aspects_orbits)+'.pickle','wb') as k:
+    with open(gcd_dir+'all_gcds_'+file_prefix+'_'+str(allowed_aspects_orbits)+'.pickle','wb') as k:
         cPickle.dump(all_gcds,k)
     end = time.time()
     print(end - start)
 
-def make_figures(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,print_progress=True,allowed_aspects='all'):
+def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,allowed_aspects_graphlets='all',n_classes=5,n_different_graphlets=5,graphlet_frequency=0.05,graphlet_size=(4,2),allowed_aspects_orbits='all',print_progress=True):
     netdir = 'Nets/'
-    with open(netdir+'_'.join(['boundaries',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as f:
+    if test_set_type == 'random':
+        file_prefix = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+    elif test_set_type == 'graphlet_insertion':
+        file_prefix = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects_graphlets),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
+    with open(netdir+'boundaries_'+file_prefix+'.pickle','rb') as f:
         boundaries = cPickle.load(f)
-    with open(netdir+'_'.join(['labels',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as g:
+    with open(netdir+'labels_'+file_prefix+'.pickle','rb') as g:
         labels = cPickle.load(g)
     gcd_dir = 'GCDs/'
-    with open(gcd_dir+'_'.join(['all_gcds',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'.pickle','rb') as h:
+    with open(gcd_dir+'all_gcds_'+file_prefix+'_'+str(allowed_aspects_orbits)+'.pickle','rb') as h:
         all_gcds = cPickle.load(h)
-    fig_dir = 'Figures/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    fig_dir = 'Figures/'+file_prefix+'_'+str(allowed_aspects_orbits)+'/'
     if not os.path.exists(fig_dir):
         os.makedirs(fig_dir)
     dist_name = 'GCD'
