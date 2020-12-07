@@ -151,7 +151,7 @@ def main():
         #fig = plot_AUPRs(auprs, labels=labels, title=title)
         #fig.savefig('pairwise_auprs_1_'+title+'.pdf',bbox_inches='tight')
 
-def make_networks(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,allowed_aspects='all',n_classes=5,n_different_graphlets=5,graphlet_frequency=0.05,graphlet_size=(4,2),print_progress=True):
+def make_networks(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,allowed_aspects_graphlets='all',n_classes=5,n_different_graphlets=5,graphlet_frequency=0.05,graphlet_size=(4,2),print_progress=True):
     '''
     test_set_type == 'random':
         parameters used: n_nets, n_n, n_l, m, use_simple_conf, use_simple_conf_plex, print_progress
@@ -159,21 +159,21 @@ def make_networks(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple
         parameters used: n_nets, n_n, n_l, m, n_classes, n_different_graphlets, graphlet_frequency, graphlet_size, print_progress
     See function example_networks
     '''
-    networks, net_names, boundaries, labels = example_networks(test_set_type,n_nets,n_n,n_l,m,use_simple_conf,use_simple_conf_plex,allowed_aspects,n_classes,n_different_graphlets,graphlet_frequency,graphlet_size,print_progress)
-    savedir = 'Nets/'
-    if not os.path.exists(savedir):
-        os.makedirs(savedir)
+    networks, net_names, boundaries, labels = example_networks(test_set_type,n_nets,n_n,n_l,m,use_simple_conf,use_simple_conf_plex,allowed_aspects_graphlets,n_classes,n_different_graphlets,graphlet_frequency,graphlet_size,print_progress)
+    netdir = 'Nets/'
+    if not os.path.exists(netdir):
+        os.makedirs(netdir)
     if test_set_type == 'random':
-        savename_addition = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+        file_prefix = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
     elif test_set_type == 'graphlet_insertion':
-        savename_addition = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
-    with open(savedir+'networks_'+savename_addition+'.pickle','wb') as f:
+        file_prefix = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects_graphlets),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
+    with open(netdir+'networks_'+file_prefix+'.pickle','wb') as f:
         cPickle.dump(networks,f)
-    with open(savedir+'netnames_'+savename_addition+'.pickle','wb') as g:
+    with open(netdir+'netnames_'+file_prefix+'.pickle','wb') as g:
         cPickle.dump(net_names,g)
-    with open(savedir+'boundaries_'+savename_addition+'.pickle','wb') as h:
+    with open(netdir+'boundaries_'+file_prefix+'.pickle','wb') as h:
         cPickle.dump(boundaries,h)
-    with open(savedir+'labels_'+savename_addition+'.pickle','wb') as j:
+    with open(netdir+'labels_'+file_prefix+'.pickle','wb') as j:
         cPickle.dump(labels,j)
     return networks,net_names,boundaries,labels
 
