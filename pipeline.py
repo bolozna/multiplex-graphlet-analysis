@@ -251,19 +251,23 @@ def make_orbits(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_c
     end = time.time()
     print(end - start)
 
-def make_gcds(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,print_progress=True,allowed_aspects='all'):
+def make_gcds(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,allowed_aspects_graphlets='all',n_classes=5,n_different_graphlets=5,graphlet_frequency=0.05,graphlet_size=(4,2),allowed_aspects_orbits='all',print_progress=True):
     start = time.time()
-    orbit_dir = 'Orbits/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
-    orbit_aux_dir = 'Orbits_aux/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    if test_set_type == 'random':
+        file_prefix = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+    elif test_set_type == 'graphlet_insertion':
+        file_prefix = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects_graphlets),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
+    orbit_dir = 'Orbits/'+file_prefix+'_'+str(allowed_aspects_orbits)+'/'
+    orbit_aux_dir = 'Orbits_aux/'+file_prefix+'_'+str(allowed_aspects_orbits)+'/'
     netdir = 'Nets/'
-    with open(netdir+'_'.join(['netnames',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as f:
+    with open(netdir+'netnames_'+file_prefix+'.pickle','rb') as f:
         net_names = cPickle.load(f)
     with open(orbit_aux_dir+'orbit_is_d','rb') as g:
         orbit_is_d = cPickle.load(g)
     with open(orbit_aux_dir+'orbit_lists','rb') as h:
         orbit_lists = cPickle.load(h)
     gcd_dir = 'GCDs/'
-    gcd_aux_dir = 'GCDs_aux/'+'_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'/'
+    gcd_aux_dir = 'GCDs_aux/'+file_prefix+'_'+str(allowed_aspects_orbits)+'/'
     if not os.path.exists(gcd_dir):
         os.makedirs(gcd_dir)
     if not os.path.exists(gcd_aux_dir):
@@ -282,7 +286,7 @@ def make_gcds(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf
         orbit_is = orbit_is_d[n_l_orbit]
         if n_l_orbit == 1:
             net_layers = [0]
-        elif allowed_aspects == [0]:
+        elif allowed_aspects_orbits == [0]:
             net_layers = layers
         else:
             net_layers = list(range(n_l_orbit))
@@ -291,7 +295,7 @@ def make_gcds(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf
             with open(gcd_aux_savename,'rb') as aux_f:
                 gcds = cPickle.load(aux_f)
         else:
-            gcds = data_analysis.GCDs(net_names, n, n_l_orbit, net_layers, orbit_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects)
+            gcds = data_analysis.GCDs(net_names, n, n_l_orbit, net_layers, orbit_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects_orbits)
             with open(gcd_aux_savename,'wb') as aux_g:
                 cPickle.dump(gcds,aux_g)
         all_gcds[(n_l_orbit, n, r)] = gcds
@@ -304,7 +308,7 @@ def make_gcds(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf
             with open(gcd_aux_savename,'rb') as aux_h:
                 gcds = cPickle.load(aux_h)
         else:
-            with open(netdir+'_'.join(['networks',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])+'.pickle','rb') as j:
+            with open(netdir+'networks_'+file_prefix+'.pickle','rb') as j:
                 networks = cPickle.load(j)
             gcds = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks,dpk_aux_dir)
             with open(gcd_aux_savename,'wb') as aux_j:
@@ -312,7 +316,7 @@ def make_gcds(n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf
         all_gcds[('DPK','','')] = gcds
         if print_progress:
             print('GCDs DPK method done')
-    with open(gcd_dir+'_'.join(['all_gcds',str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex),str(allowed_aspects)])+'.pickle','wb') as k:
+    with open(gcd_dir+'all_gcds_'+file_prefix+str(allowed_aspects_orbits)+'.pickle','wb') as k:
         cPickle.dump(all_gcds,k)
     end = time.time()
     print(end - start)
