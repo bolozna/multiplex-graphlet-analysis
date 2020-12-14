@@ -598,11 +598,15 @@ def ba_independent_multiplex(n, ms, couplings=None):
         net.add_layer(ii)
         #net.A[ii] = pymnet.nx.barabasi_albert_graph(n, ms[ii]) # apparently the seed network has no edges so average degs are not accurate
         net.A[ii] = ba_single_layer(n, ms[ii])
+    # independent random shuffle nodes on each layer to remove iteration order effect
+    net = pymnet.transforms.randomize_nodes_by_layer(net)
     return net
 
 def ba_single_layer(n,m):
     # seed network is full net with m+1 nodes
     # the number of edges is thus n*m-0.5*m-0.5*m**2
+    # the nodes are iterated in order, so smaller node numbers get larger degs
+    # this must be taken into account if made into multiplex
     net = pymnet.full(nodes=m+1,layers=None)
     rng = random.Random()
     stubs = list(range(m+1))*m
