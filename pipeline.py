@@ -506,7 +506,7 @@ def example_networks(test_set_type, n_nets, n_n, n_l, m, use_simple_conf=False, 
             if use_simple_conf_plex:
                 net = simple_conf_overlaps(ba_plex[i])
             else:
-                net = pymnet.models.conf_overlaps(get_overlap_degs(ba[i]))
+                net = pymnet.models.conf_overlaps(get_overlap_degs(ba_plex[i]))
             conf_plex.append(net)
             conf_plex_names.append('conf_plex_'+str(i))
         if print_progress:
