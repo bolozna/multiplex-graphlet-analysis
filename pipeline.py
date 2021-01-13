@@ -395,26 +395,31 @@ def GCD_matrix_save_memory(gcm_file_names):
         del gcm1
     return gcds
 
-def example_networks(test_set_type, n_nets, n_n, n_l, m, use_simple_conf=False, use_simple_conf_plex=False, allowed_aspects='all', n_classes=5, n_different_graphlets=5, graphlet_frequency=0.05, graphlet_size=(4,2), print_progress=False):
+def example_networks(test_set_type, n_nets, n_n, n_l, m,
+                     use_simple_conf=False, use_simple_conf_plex=False,
+                     allowed_aspects='all', n_classes=5, n_different_graphlets=5, graphlet_frequency=0.05, graphlet_size=(4,2),
+                     print_progress=False):
     '''
     Generates a test set of networks.
     
     Parameters
     ----------
-    test_set_type : 'random' or 'graphlet_insertion'
-        Determines whether random network models or the graphlet insertion method is used in creating the test set
+    test_set_type : 'random' or 'random_deg_progression' or 'graphlet_insertion'
+        Determines whether random network models (static or progressing avg degs) or the graphlet insertion method is used in creating the test set
     n_nets : int
         Number of networks generated from each model / number of networks in each graphlet insertion set
-        Used in both test set types
+        Used in all test set types
     n_n : int
         Number of nodes in each network
-        Used in both test set types
+        Used in all test set types
     n_l : int
         Number of layers in each network
-        Used in both test set types
-    m : int
-        Number of edges added to each new node in each layer in the BA model
-        Used in both test set types
+        Used in all test set types
+    m : int or list
+        Number of edges added to each new node in each layer in the BA model, int (test set type random)
+        Same as above except a list defining the progression of the parameter, list (test set type random_deg_progression)
+        n_n*m is the number of edges per layer in the baseline ER model, int (test set type graphlet_insertion)
+        Used in all test set types
     use_simple_conf : bool
         Is the simplified conf net model used
         Used only in test set type random
@@ -450,9 +455,10 @@ def example_networks(test_set_type, n_nets, n_n, n_l, m, use_simple_conf=False, 
         Group labels
     '''
     
-    ms = [m] * n_l
     
     if test_set_type == 'random':
+        
+        ms = [m] * n_l
         
         ba = []
         ba_plex = []
@@ -588,6 +594,32 @@ def example_networks(test_set_type, n_nets, n_n, n_l, m, use_simple_conf=False, 
             labels.append('graphlet_set'+str(ii+1))
             if print_progress:
                 print(labels[-1]+' done')
+    
+    elif test_set_type == 'random_deg_progression':
+        n_diff_degs = len(m)
+        assert n_nets % n_diff_degs == 0
+        n_per_deg = n_nets // n_diff_degs
+        all_res = list()
+        for m_instance in m:
+            all_res.append(example_networks(test_set_type='random',n_nets=n_per_deg,n_n=n_n,n_l=n_l,m=m_instance,use_simple_conf=use_simple_conf,use_simple_conf_plex=use_simple_conf_plex,print_progress=print_progress))
+        boundaries_0 = all_res[0][2]
+        labels_0 = all_res[0][3]
+        networks = []
+        net_names = []
+        for ii in range(len(labels_0)):
+            for jj in range(n_diff_degs):
+                if ii == 0:
+                    previous = 0
+                else:
+                    previous = boundaries_0[ii-1]
+                for kk in range(previous,boundaries_0[ii]):
+                    networks.append(all_res[jj][0][kk])
+                    curr_name = all_res[jj][1][kk].split('_')
+                    number = str(int(curr_name[-1])+jj*n_per_deg)
+                    curr_name[-1] = number
+                    net_names.append('_'.join(curr_name))
+        boundaries = [b*n_diff_degs for b in boundaries_0]
+        labels = labels_0
     
     return networks, net_names, boundaries, labels
 
