@@ -155,6 +155,8 @@ def make_networks(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple
     '''
     test_set_type == 'random':
         parameters used: n_nets, n_n, n_l, m, use_simple_conf, use_simple_conf_plex, print_progress
+    test set type == 'random_deg_progression':
+        parameters used: n_nets, n_n, n_l, m, use_simple_conf, use_simple_conf_plex, print_progress
     test_set_type == 'graphlet_insertion':
         parameters used: n_nets, n_n, n_l, m, n_classes, n_different_graphlets, graphlet_frequency, graphlet_size, print_progress
     See function example_networks
@@ -165,6 +167,8 @@ def make_networks(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple
         os.makedirs(netdir)
     if test_set_type == 'random':
         file_prefix = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+    elif test_set_type == 'random_deg_progression':
+        file_prefix = '_'.join(['deg_progression',str(n_nets),str(n_n),str(n_l),str(m).replace(' ',''),str(use_simple_conf),str(use_simple_conf_plex)])
     elif test_set_type == 'graphlet_insertion':
         file_prefix = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects_graphlets),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
     with open(netdir+'networks_'+file_prefix+'.pickle','wb') as f:
@@ -182,6 +186,8 @@ def make_orbits(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_c
     # prefix depending on test_set_type
     if test_set_type == 'random':
         file_prefix = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+    elif test_set_type == 'random_deg_progression':
+        file_prefix = '_'.join(['deg_progression',str(n_nets),str(n_n),str(n_l),str(m).replace(' ',''),str(use_simple_conf),str(use_simple_conf_plex)])
     elif test_set_type == 'graphlet_insertion':
         file_prefix = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects_graphlets),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
     with open(netdir+'networks_'+file_prefix+'.pickle','rb') as f:
@@ -255,6 +261,8 @@ def make_gcds(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_con
     start = time.time()
     if test_set_type == 'random':
         file_prefix = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+    elif test_set_type == 'random_deg_progression':
+        file_prefix = '_'.join(['deg_progression',str(n_nets),str(n_n),str(n_l),str(m).replace(' ',''),str(use_simple_conf),str(use_simple_conf_plex)])
     elif test_set_type == 'graphlet_insertion':
         file_prefix = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects_graphlets),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
     orbit_dir = 'Orbits/'+file_prefix+'_'+str(allowed_aspects_orbits)+'/'
@@ -325,6 +333,8 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
     netdir = 'Nets/'
     if test_set_type == 'random':
         file_prefix = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+    elif test_set_type == 'random_deg_progression':
+        file_prefix = '_'.join(['deg_progression',str(n_nets),str(n_n),str(n_l),str(m).replace(' ',''),str(use_simple_conf),str(use_simple_conf_plex)])
     elif test_set_type == 'graphlet_insertion':
         file_prefix = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects_graphlets),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
     with open(netdir+'boundaries_'+file_prefix+'.pickle','rb') as f:
