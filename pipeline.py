@@ -798,15 +798,18 @@ def MDS_plot(dists, boundaries, labels, title=''):
     '''
     
     mds = manifold.MDS(n_components=3, dissimilarity='precomputed', max_iter=5000)
-    colors = ['yellow', 'magenta', 'cyan', 'orange', 'purple', 'lightgreen', 'white', 'gray']
+    #colors = ['yellow', 'magenta', 'cyan', 'orange', 'purple', 'lightgreen', 'white', 'gray']
+    #colors = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f','#e5c494','#b3b3b3']
+    colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf']
+    markers = ['^','v','s','D','P','X','o','*']
     
     Y = mds.fit_transform(dists)
     mds_fig = plt.figure()
     ax_mds = plt.subplot(111, projection='3d')
     ms = 75
     b0 = 0
-    for b1, color in zip(boundaries, colors):
-        ax_mds.scatter(Y[b0:b1, 0], Y[b0:b1, 1], Y[b0:b1, 2], c=color, s=ms)
+    for b1, color, marker in zip(boundaries, colors, markers):
+        ax_mds.scatter(Y[b0:b1, 0], Y[b0:b1, 1], Y[b0:b1, 2], c=color, s=ms, marker=marker)
         b0 = b1
     
     ax_mds.xaxis.set_major_formatter(NullFormatter())
