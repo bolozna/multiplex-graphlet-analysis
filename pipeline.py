@@ -351,16 +351,24 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
     fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name, fig_dir+dist_name+'_AUPRs.txt')
     fig.savefig(fig_dir+'precision_recall.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
     plt.close(fig)
+    fig_mds_combined = plt.figure(figsize=(15,10))
+    mds_combined_index = {(1,3):1,(2,3):2,(3,3):3,(1,4):4,(2,4):5,('DPK',''):6}
     for n_l, n, r in all_gcds:
         gcds = all_gcds[(n_l, n, r)]
         title = dist_name + '-' + str(n_l) + '-' + str(n) + r
-        fig,lgd = MDS_plot(gcds, boundaries, labels, title)
+        if r == '':
+            mds_subax = fig_mds_combined.add_subplot(2,3,mds_combined_index[(n_l,n)],projection='3d')
+            fig,lgd = MDS_plot(gcds, boundaries, labels, title, additional_ax=mds_subax)
+        else:
+            fig,lgd = MDS_plot(gcds, boundaries, labels, title)
         fig.savefig(fig_dir+'mds_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
         plt.close(fig)
         auprs = pairwise_auprs(gcds, boundaries, labels, title)
         fig = plot_AUPRs(auprs, labels=labels, title=title)
         fig.savefig(fig_dir+'pairwise_auprs_'+title+'.pdf',bbox_inches='tight')
         plt.close(fig)
+    fig_mds_combined.savefig(fig_dir+'mds_combined.pdf',bbox_inches='tight')
+    plt.close(fig_mds_combined)
 
 
 
@@ -776,7 +784,7 @@ def precision_recall_plot(all_dists, boundaries, dist_name='', AUPR_writefilenam
     return pr_fig,lgd
     
     
-def MDS_plot(dists, boundaries, labels, title=''):
+def MDS_plot(dists, boundaries, labels, title='', additional_ax=None):
     '''
     Embeds the networks in 3-dimensional space using MDS.
     
@@ -810,8 +818,13 @@ def MDS_plot(dists, boundaries, labels, title=''):
     b0 = 0
     for b1, color, marker in zip(boundaries, colors, markers):
         ax_mds.scatter(Y[b0:b1, 0], Y[b0:b1, 1], Y[b0:b1, 2], c=color, s=ms, marker=marker)
+        if additional_ax:
+            additional_ax.scatter(Y[b0:b1, 0], Y[b0:b1, 1], Y[b0:b1, 2], c=color, s=ms, marker=marker)
         b0 = b1
-    
+    if additional_ax:
+        additional_ax.xaxis.set_major_formatter(NullFormatter())
+        additional_ax.yaxis.set_major_formatter(NullFormatter())
+        additional_ax.zaxis.set_major_formatter(NullFormatter())
     ax_mds.xaxis.set_major_formatter(NullFormatter())
     ax_mds.yaxis.set_major_formatter(NullFormatter())
     ax_mds.zaxis.set_major_formatter(NullFormatter())
