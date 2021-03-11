@@ -351,13 +351,15 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
     fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name, fig_dir+dist_name+'_AUPRs.txt')
     fig.savefig(fig_dir+'precision_recall.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
     plt.close(fig)
-    fig_mds_combined = plt.figure(figsize=(15,10))
+    fig_mds_combined = plt.figure(figsize=(15,9))
     mds_combined_index = {(1,3):1,(2,3):2,(3,3):3,(1,4):4,(2,4):5,('DPK',''):6}
     for n_l, n, r in all_gcds:
         gcds = all_gcds[(n_l, n, r)]
         title = dist_name + '-' + str(n_l) + '-' + str(n) + r
         if r == '':
             mds_subax = fig_mds_combined.add_subplot(2,3,mds_combined_index[(n_l,n)],projection='3d')
+            if mds_combined_index[(n_l,n)] == 5:
+                mds_legend_subax = mds_subax
             fig,lgd = MDS_plot(gcds, boundaries, labels, title, additional_ax=mds_subax)
         else:
             fig,lgd = MDS_plot(gcds, boundaries, labels, title)
@@ -367,7 +369,8 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
         fig = plot_AUPRs(auprs, labels=labels, title=title)
         fig.savefig(fig_dir+'pairwise_auprs_'+title+'.pdf',bbox_inches='tight')
         plt.close(fig)
-    fig_mds_combined.savefig(fig_dir+'mds_combined.pdf',bbox_inches='tight')
+    lgd_mds = mds_legend_subax.legend(labels, loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=8, fontsize=15)
+    fig_mds_combined.savefig(fig_dir+'mds_combined.pdf',bbox_extra_artists=(lgd_mds,),bbox_inches='tight')
     plt.close(fig_mds_combined)
 
 
