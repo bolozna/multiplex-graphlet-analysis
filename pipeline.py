@@ -811,7 +811,8 @@ def MDS_plot(dists, boundaries, labels, title='', additional_ax=None):
     mds = manifold.MDS(n_components=3, dissimilarity='precomputed', max_iter=5000)
     #colors = ['yellow', 'magenta', 'cyan', 'orange', 'purple', 'lightgreen', 'white', 'gray']
     #colors = ['#66c2a5','#fc8d62','#8da0cb','#e78ac3','#a6d854','#ffd92f','#e5c494','#b3b3b3']
-    colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf']
+    #colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#ffff33','#a65628','#f781bf']
+    colors = ['#e41a1c','#377eb8','#4daf4a','#984ea3','#ff7f00','#cccc29','#a65628','#f781bf']
     markers = ['^','v','s','D','P','X','o','*']
     
     Y = mds.fit_transform(dists)
