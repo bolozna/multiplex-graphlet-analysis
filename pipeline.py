@@ -369,7 +369,8 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
         fig = plot_AUPRs(auprs, labels=labels, title=title)
         fig.savefig(fig_dir+'pairwise_auprs_'+title+'.pdf',bbox_inches='tight')
         plt.close(fig)
-    lgd_mds = mds_legend_subax.legend(replace_labels(labels), loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=8, fontsize=15)
+    lgd_mds = mds_legend_subax.legend(replace_labels(labels), loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=8, fontsize=15, handletextpad=0.05)
+    fig_mds_combined.subplots_adjust(hspace=-0.05,wspace=-0.1)
     fig_mds_combined.savefig(fig_dir+'mds_combined.pdf',bbox_extra_artists=(lgd_mds,),bbox_inches='tight')
     plt.close(fig_mds_combined)
 
