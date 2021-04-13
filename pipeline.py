@@ -352,7 +352,11 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
     fig.savefig(fig_dir+'precision_recall.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
     plt.close(fig)
     fig_mds_combined = plt.figure(figsize=(15,9))
+    fig_auprs_combined,axs_auprs_combined = plt.subplots(nrows=2,ncols=3,sharey='row',sharex='col',figsize=(15,9))
+    fig_auprs_combined.subplots_adjust(bottom=0.1, top=0.9, left=0.1, right=0.8, wspace=0.02, hspace=0.02)
+    auprs_combined_cbar_ax = fig_auprs_combined.add_axes([0.83, 0.1, 0.02, 0.8])
     mds_combined_index = {(1,3):1,(2,3):2,(3,3):3,(1,4):4,(2,4):5,('DPK',''):6}
+    auprs_combined_index = {(1,3):(0,0),(2,3):(0,1),(3,3):(0,2),(1,4):(1,0),(2,4):(1,1),('DPK',''):(1,2)}
     for n_l, n, r in all_gcds:
         gcds = all_gcds[(n_l, n, r)]
         title = dist_name + '-' + str(n_l) + '-' + str(n) + r
@@ -366,13 +370,19 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
         fig.savefig(fig_dir+'mds_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
         plt.close(fig)
         auprs = pairwise_auprs(gcds, boundaries, labels, title)
-        fig = plot_AUPRs(auprs, labels=replace_labels(labels), title=title)
+        if r == '':
+            add_ax = axs_auprs_combined[auprs_combined_index[(n_l,n)][0],auprs_combined_index[(n_l,n)][1]]
+            fig = plot_AUPRs(auprs, labels=replace_labels(labels), title=title, additional_ax=add_ax, additional_cbar_ax=auprs_combined_cbar_ax)
+        else:
+            fig = plot_AUPRs(auprs, labels=replace_labels(labels), title=title)
         fig.savefig(fig_dir+'pairwise_auprs_'+title+'.pdf',bbox_inches='tight')
         plt.close(fig)
     lgd_mds = mds_legend_subax.legend(replace_labels(labels), loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=8, fontsize=15, handletextpad=0.05)
     fig_mds_combined.subplots_adjust(hspace=-0.05,wspace=-0.1)
     fig_mds_combined.savefig(fig_dir+'mds_combined.pdf',bbox_extra_artists=(lgd_mds,),bbox_inches='tight')
     plt.close(fig_mds_combined)
+    fig_auprs_combined.savefig(fig_dir+'pairwise_auprs_combined.pdf')
+    plt.close(fig_auprs_combined)
 
 def replace_labels(labels):
     new_label_dict = {'BA':'BA-ind','BA-plex':'BA-dep','conf':'Conf-ind','conf-plex':'Conf-dep','ER$_{0,0}$':'ER-0','ER$_{20,20}$':'ER-20','geo':'GEO','WS':'WS'}
@@ -896,7 +906,7 @@ def pairwise_auprs(dists, boundaries, labels, title=''):
     return auprs
     
     
-def plot_AUPRs(auprs, labels, title=''):
+def plot_AUPRs(auprs, labels, title='', additional_ax=None, additional_cbar_ax=None):
     '''
     Visualizes pairwise AUPRs (or other measures in symmetric matrix form)
     
@@ -924,6 +934,8 @@ def plot_AUPRs(auprs, labels, title=''):
     
     with sns.axes_style("white"):
         fig, ax = plt.subplots()
+        if additional_ax is not None and additional_cbar_ax is not None:
+            sns.heatmap(auprs, ax=additional_ax, xticklabels=labels[:-1], yticklabels=labels[1:], vmin=0.5, mask=mask, cbar_ax=additional_cbar_ax)
         sns.heatmap(auprs, ax=ax, xticklabels=labels[:-1], yticklabels=labels[1:], vmin=0.5, mask=mask)
         plt.title(title)
         
