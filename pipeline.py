@@ -381,7 +381,7 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
     fig_mds_combined.subplots_adjust(hspace=-0.05,wspace=-0.1)
     fig_mds_combined.savefig(fig_dir+'mds_combined.pdf',bbox_extra_artists=(lgd_mds,),bbox_inches='tight')
     plt.close(fig_mds_combined)
-    auprs_combined_cbar_ax.tick_params(axis='both', which='both', labelsize=15)
+    auprs_combined_cbar_ax.tick_params(axis='both', which='both', length=0, labelsize=15)
     fig_auprs_combined.savefig(fig_dir+'pairwise_auprs_combined.pdf',bbox_inches='tight')
     plt.close(fig_auprs_combined)
 
