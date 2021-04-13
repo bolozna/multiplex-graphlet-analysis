@@ -381,7 +381,8 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
     fig_mds_combined.subplots_adjust(hspace=-0.05,wspace=-0.1)
     fig_mds_combined.savefig(fig_dir+'mds_combined.pdf',bbox_extra_artists=(lgd_mds,),bbox_inches='tight')
     plt.close(fig_mds_combined)
-    fig_auprs_combined.savefig(fig_dir+'pairwise_auprs_combined.pdf')
+    auprs_combined_cbar_ax.tick_params(axis='both', which='both', labelsize=15)
+    fig_auprs_combined.savefig(fig_dir+'pairwise_auprs_combined.pdf',bbox_inches='tight')
     plt.close(fig_auprs_combined)
 
 def replace_labels(labels):
@@ -936,6 +937,8 @@ def plot_AUPRs(auprs, labels, title='', additional_ax=None, additional_cbar_ax=N
         fig, ax = plt.subplots()
         if additional_ax is not None and additional_cbar_ax is not None:
             sns.heatmap(auprs, ax=additional_ax, xticklabels=labels[:-1], yticklabels=labels[1:], vmin=0.5, mask=mask, cbar_ax=additional_cbar_ax)
+            additional_ax.tick_params(axis='both', which='both', length=0, labelsize=15)
+            additional_ax.tick_params(axis='x', rotation=45)
         sns.heatmap(auprs, ax=ax, xticklabels=labels[:-1], yticklabels=labels[1:], vmin=0.5, mask=mask)
         plt.title(title)
         
