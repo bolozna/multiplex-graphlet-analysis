@@ -940,6 +940,8 @@ def plot_AUPRs(auprs, labels, title='', additional_ax=None, additional_cbar_ax=N
             additional_ax.tick_params(axis='both', which='both', length=0, labelsize=15, rotation=0)
             additional_ax.tick_params(axis='x', rotation=45)
         sns.heatmap(auprs, ax=ax, xticklabels=labels[:-1], yticklabels=labels[1:], vmin=0.5, mask=mask)
+        plt.tick_params(axis='both', which='both', length=0, labelsize=15, rotation=0)
+        plt.tick_params(axis='x', rotation=45)
         plt.title(title)
         
     return fig
