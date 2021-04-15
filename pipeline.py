@@ -386,7 +386,7 @@ def make_figures(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_
     plt.close(fig_auprs_combined)
 
 def replace_labels(labels):
-    new_label_dict = {'BA':'BA-ind','BA-plex':'BA-dep','conf':'Conf-ind','conf-plex':'Conf-dep','ER$_{0,0}$':'ER-0','ER$_{20,20}$':'ER-20','geo':'GEO','WS':'WS'}
+    new_label_dict = {'BA':'BA-ind','BA-plex':'BA-dep','conf':'Conf-ind','conf-plex':'Conf-dep','ER$_{0,0}$':'ER-0','ER$_{20,20}$':'ER-20','geo':'GEO','WS':'WS','graphlet_set1':'1','graphlet_set2':'2','graphlet_set3':'3','graphlet_set4':'4','graphlet_set5':'5'}
     return [new_label_dict.get(s, s) for s in labels]
 
 
@@ -937,7 +937,7 @@ def plot_AUPRs(auprs, labels, title='', additional_ax=None, additional_cbar_ax=N
         fig, ax = plt.subplots()
         if additional_ax is not None and additional_cbar_ax is not None:
             sns.heatmap(auprs, ax=additional_ax, xticklabels=labels[:-1], yticklabels=labels[1:], vmin=0.5, mask=mask, cbar_ax=additional_cbar_ax)
-            additional_ax.tick_params(axis='both', which='both', length=0, labelsize=15)
+            additional_ax.tick_params(axis='both', which='both', length=0, labelsize=15, rotation=0)
             additional_ax.tick_params(axis='x', rotation=45)
         sns.heatmap(auprs, ax=ax, xticklabels=labels[:-1], yticklabels=labels[1:], vmin=0.5, mask=mask)
         plt.title(title)
