@@ -25,131 +25,14 @@ except ImportError:
 
 
 def main():
-    
-    n_nets = 10
-    n_n = 1000
-    n_l = 3
-    m = 2
-    use_simple_conf=False
-    use_simple_conf_plex=True
-    print_progress=True
-    allowed_aspects = 'all'
-    
-    networks, net_names, boundaries, labels = example_networks(n_nets, n_n, n_l, m, use_simple_conf, use_simple_conf_plex, print_progress)
-    
-    directory = 'Results_3'
-    if not os.path.exists(directory):
-        os.makedirs(directory)
-    
-    layers = list(range(n_l))
-    orbit_lists = {}
-    orbit_is_d = {}
-    start = time.time()
-    nn_nl = [(1,4), (2,4), (3,3)]
-    for n_l, n in nn_nl:
-        if n_l == 1:
-            net_layers = [0]
-        else:
-            net_layers = layers
-            
-        nets, invs = graphlets.graphlets(n, net_layers, n_l, allowed_aspects=allowed_aspects)
-        auts = graphlets.automorphism_orbits(nets, allowed_aspects=allowed_aspects)
-        orbit_is = graphlets.orbit_numbers(n, nets, auts)
-        orbit_is_d[n_l] = orbit_is
-        orbit_list = graphlets.ordered_orbit_list(orbit_is)
-        orbit_lists[n_l] = orbit_list
-        if print_progress:
-            print('Orbit list '+str(n_l)+' layers, '+str(n)+' nodes done')
-        
-        count = 0
-        for net, name in zip(networks, net_names):
-            
-            # below: interface function for doing all of this, should work but maybe needs a test
-            # TODO: test and use the interface instead to simplify this code
-            #interface.graphlet_degree_distributions(net,n,n_l,save_name='interface_'+name)
-            
-            o_dir = directory + '/' + name + '_' + str(n_l)
-            if not os.path.exists(o_dir):
-                os.makedirs(o_dir)
-            nodes = net.slices[0]
-            if n_l == 1:
-                agg_net = pymnet.MultiplexNetwork()
-                for node in nodes:
-                    agg_net.add_node(node)
-                    
-                for e in net.edges:
-                    agg_net[e[0], e[1], 0] = 1
-                    
-                net = agg_net
-                
-            for layer_comb in itertools.combinations(net_layers, n_l):
-                sub_net = pymnet.subnet(net, nodes, layer_comb)
-                orbits = graphlets.orbit_counts_all(sub_net, n, nets, invs, auts, orbit_list, allowed_aspects=allowed_aspects)
-                f_name = o_dir + '/' + name
-                for layer in layer_comb:
-                    f_name += "_" + str(layer)
-                f_name += '.txt'
-                write_orbit_counts(orbits, f_name, nodes, orbit_list)
-            
-            count += 1
-            if print_progress:
-                print('+'*count+'-'*(len(networks)-count))
-        
-        if print_progress:
-            print('Orbit counts '+str(n_l)+' layers, '+str(n)+' nodes done')
-    
-    end = time.time()
-    print(end - start)
-    
-    start = time.time()
-    res_dir = directory + '/'
-    all_gcds = {}
-    nn_nls = [(1,4), (1,3), (2,4), (2,3), (3,3)]
-    rs = ['', 'R']
-    for nn_nl, r in itertools.product(nn_nls, rs):
-        n_l, n = nn_nl
-        if r == 'R':
-            no_reds = True
-        else:
-            no_reds = False
-        
-        orbit_list = orbit_lists[n_l]
-        orbit_is = orbit_is_d[n_l]
-        
-        if n_l == 1:
-            net_layers = [0]
-        elif allowed_aspects == [0]:
-            net_layers = layers
-        else:
-            net_layers = list(range(n_l))
-        gcds = data_analysis.GCDs(net_names, n, n_l, net_layers, res_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects)
-        all_gcds[(n_l, n, r)] = gcds
-        
-        if print_progress:
-            print('GCDs '+str(n_l)+' layers, '+str(n)+' nodes done')
-    
-    if DPK_available:
-        all_gcds[('DPK','','')] = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks)
-        if print_progress:
-            print('GCDs DPK method done')
-            
-    cPickle.dump(all_gcds,open('all_gcds_3.pickle','wb'))
-    
-    end = time.time()
-    print(end - start)
-    
-    dist_name = 'GCD'
-    fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name)
-    fig.savefig('precision_recall_3.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
-    for n_l, n, r in all_gcds:
-        pass
-        #gcds = all_gcds[(n_l, n, r)]
-        #title = dist_name + '-' + str(n_l) + '-' + str(n) + r
-        #fig,lgd = MDS_plot(gcds, boundaries, labels, title)
-        #fig.savefig('mds_1_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
-        #auprs = pairwise_auprs(gcds, boundaries, labels, title)
-        #fig = plot_AUPRs(auprs, labels=labels, title=title)
-        #fig.savefig('pairwise_auprs_1_'+title+'.pdf',bbox_inches='tight')
+    print('To use, run:')
+    print('')
+    print('pipeline.make_networks(...)')
+    print('pipeline.make_orbits(...)')
+    print('pipeline.make_gcds(...)')
+    print('pipeline.make_figures(...)')
+    print('')
+    print('Required parameters differ by network test set, see make_networks. In addition to params used by make_networks, make_orbits and make_gcds and make_figures use parameter allowed_aspects_orbits.')
 
 def make_networks(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_conf=False,use_simple_conf_plex=True,allowed_aspects_graphlets='all',n_classes=5,n_different_graphlets=5,graphlet_frequency=0.05,graphlet_size=(4,2),print_progress=True):
     '''
