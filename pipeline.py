@@ -478,16 +478,6 @@ def example_networks(test_set_type, n_nets, n_n, n_l, m,
         if print_progress:
             print('ws done')
         
-        # conf degs should be based on ba and conf plex degs should be based on ba plex degs (?) -> normal ba needs to be implemented
-        # what is the approximate edge density in geo?
-        # what is the starting edge number in ws? The same m as in ba?
-        # !!! what should the couplings be? !!!
-        # are the er edges per layer (n_e) calculated correctly? n_e seems to be somehow average number of edges per layer in first ba plex net (except some edges get squished by aggregation so its less actually)
-        # check edge numbers per layer: should these be the same?
-        #for n in nets:
-        #    print len([x for x in list(n.edges) if x[2] == x[3]])
-    
-        
         networks = ba + ba_plex + conf + conf_plex + er_0 + er_20 + geo + ws
         net_names = ba_names + ba_plex_names + conf_names + conf_plex_names + er_0_names + er_20_names + geo_names + ws_names
         boundaries = [n_nets, n_nets*2, n_nets*3, n_nets*4, n_nets*5, n_nets*6, n_nets*7, n_nets*8]
