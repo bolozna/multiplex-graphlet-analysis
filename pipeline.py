@@ -616,6 +616,21 @@ def simple_conf_overlaps(M):
                         M_conf_overlap[sampled_edge[0],ll][sampled_edge[1],ll] = 1
     return M_conf_overlap
 
+def load_ppi_data_net(filename):
+    # load multiplex net in the format layerID nodeID nodeID
+    M = pymnet.MultiplexNetwork(couplings='categorical',directed=False,fullyInterconnected=False)
+    with open(filename,'r') as f:
+        for line in f:
+            linedata = line.split()
+            layer = int(linedata[0])
+            node1 = int(linedata[1])
+            node2 = int(linedata[2])
+            if node1 != node2:
+                M.add_layer(layer)
+                M.add_node(node1,layer)
+                M.add_node(node2,layer)
+                M[node1,layer][node2,layer] = 1
+    return M
 
 def precision_recall_plot(all_dists, boundaries, dist_name='', AUPR_writefilename=None):
     '''
