@@ -616,20 +616,37 @@ def simple_conf_overlaps(M):
                         M_conf_overlap[sampled_edge[0],ll][sampled_edge[1],ll] = 1
     return M_conf_overlap
 
-def load_ppi_data_net(filename):
+def load_ppi_data_net(filename,layer_filename):
     # load multiplex net in the format layerID nodeID nodeID
-    M = pymnet.MultiplexNetwork(couplings='categorical',directed=False,fullyInterconnected=False)
+    # only allow specific, shared interaction types:
+    # 0 direct_interaction
+    # 1 physical_association
+    # 2 association
+    # The ordering might be different, so map to the above ordering of layers.
+    # Note also that couplings are set to None, like in the generated models.
+    allowed_interactions = {'direct_interaction':0,'physical_association':1,'association':2}
+    mapping_layer_numbers = dict()
+    with open(layer_filename,'r') as g:
+        for line in g:
+            linedata = line.split()
+            if linedata[0] == 'layerID':
+                continue
+            layerID = int(linedata[0])
+            interaction = linedata[1]
+            if interaction in allowed_interactions:
+                mapping_layer_numbers[layerID] = allowed_interactions[interaction]
+    M = pymnet.MultiplexNetwork(couplings=None,directed=False,fullyInterconnected=False)
     with open(filename,'r') as f:
         for line in f:
             linedata = line.split()
             layer = int(linedata[0])
             node1 = int(linedata[1])
             node2 = int(linedata[2])
-            if node1 != node2:
-                M.add_layer(layer)
-                M.add_node(node1,layer)
-                M.add_node(node2,layer)
-                M[node1,layer][node2,layer] = 1
+            if layer in mapping_layer_numbers and node1 != node2:
+                M.add_layer(mapping_layer_numbers[layer])
+                M.add_node(node1,layer=mapping_layer_numbers[layer])
+                M.add_node(node2,layer=mapping_layer_numbers[layer])
+                M[node1,mapping_layer_numbers[layer]][node2,mapping_layer_numbers[layer]] = 1
     return M
 
 def make_ppi_networks():
@@ -638,7 +655,8 @@ def make_ppi_networks():
     networks, net_names = [],[]
     for name in names:
         filename = 'multiplex_pp_data/'+name+'_Multiplex_Genetic/Dataset/'+name.lower()+'_genetic_multiplex.edges'
-        M = load_ppi_data_net(filename)
+        layer_filename = 'multiplex_pp_data/'+name+'_Multiplex_Genetic/Dataset/'+name.lower()+'_genetic_layers.txt'
+        M = load_ppi_data_net(filename,layer_filename)
         networks.append(M)
         net_names.append(name)
     boundaries = [6,7,8,11]
@@ -652,6 +670,77 @@ def make_ppi_networks():
         cPickle.dump(boundaries,h)
     with open(netdir+'labels_'+file_prefix+'.pickle','wb') as j:
         cPickle.dump(labels,j)
+
+def make_ppi_orbits(nn_nl=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='all',print_progress=True):
+    # NB! Assumes three layers 0,1,2 from the three shared interaction types in the data
+    n_l = 3
+    netdir = 'Nets/'
+    file_prefix = 'ppi_by_kingdom'
+    with open(netdir+'networks_'+file_prefix+'.pickle','rb') as f:
+        networks = cPickle.load(f)
+    with open(netdir+'netnames_'+file_prefix+'.pickle','rb') as g:
+        net_names = cPickle.load(g)
+    if print_progress:
+        print('Nets loaded')
+    orbit_dir = 'Orbits/'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nl).replace(' ','')+'/'
+    if not os.path.exists(orbit_dir):
+        os.makedirs(orbit_dir)
+    orbit_aux_dir = 'Orbits_aux/'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nl).replace(' ','')+'/'
+    if not os.path.exists(orbit_aux_dir):
+        os.makedirs(orbit_aux_dir)
+    layers = list(range(n_l))
+    orbit_lists = {}
+    orbit_is_d = {}
+    start = time.time()
+    for n_l_orbit, n in nn_nl:
+        if n_l_orbit == 1:
+            net_layers = [0]
+        else:
+            net_layers = layers
+        nets, invs = graphlets.graphlets(n, net_layers, n_l_orbit, allowed_aspects=allowed_aspects_orbits)
+        auts = graphlets.automorphism_orbits(nets, allowed_aspects=allowed_aspects_orbits)
+        orbit_is = graphlets.orbit_numbers(n, nets, auts)
+        orbit_is_d[n_l_orbit] = orbit_is
+        orbit_list = graphlets.ordered_orbit_list(orbit_is)
+        orbit_lists[n_l_orbit] = orbit_list
+        if print_progress:
+            print('Orbit list '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
+        count = 0
+        for net, name in zip(networks, net_names):
+            # below: interface function for doing all of this, should work but maybe needs a test
+            # TODO: test and use the interface instead to simplify this code, fix save_name
+            #interface.graphlet_degree_distributions(net,n,n_l_orbit,save_name='interface_'+name)
+            o_dir = orbit_dir + '/' + name + '_' + str(n_l_orbit)
+            if not os.path.exists(o_dir):
+                os.makedirs(o_dir)
+            nodes = net.slices[0]
+            if n_l_orbit == 1:
+                agg_net = pymnet.MultiplexNetwork()
+                for node in nodes:
+                    agg_net.add_node(node)
+                for e in net.edges:
+                    agg_net[e[0], e[1], 0] = 1
+                net = agg_net
+            for layer_comb in itertools.combinations(net_layers, n_l_orbit):
+                f_name = o_dir + '/' + name
+                for layer in layer_comb:
+                    f_name += "_" + str(layer)
+                f_name += '.txt'
+                if not os.path.exists(f_name):
+                    sub_net = pymnet.subnet(net, nodes, layer_comb)
+                    orbits = graphlets.orbit_counts_all(sub_net, n, nets, invs, auts, orbit_list, allowed_aspects=allowed_aspects_orbits)
+                    write_orbit_counts(orbits, f_name, nodes, orbit_list)
+            count += 1
+            if print_progress:
+                print('+'*count+'-'*(len(networks)-count))
+        if print_progress:
+            print('Orbit counts '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
+    with open(orbit_aux_dir+'orbit_is_d','wb') as f:
+        cPickle.dump(orbit_is_d,f)
+    with open(orbit_aux_dir+'orbit_lists','wb') as g:
+        cPickle.dump(orbit_lists,g)
+    end = time.time()
+    print(end - start)
 
 def precision_recall_plot(all_dists, boundaries, dist_name='', AUPR_writefilename=None):
     '''
