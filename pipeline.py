@@ -632,6 +632,27 @@ def load_ppi_data_net(filename):
                 M[node1,layer][node2,layer] = 1
     return M
 
+def make_ppi_networks():
+    netdir = 'Nets/'
+    names = ['Bos','Celegans','Drosophila','Gallus','Mus','Rattus','Arabidopsis','Plasmodium','Candida','SacchCere','SacchPomb']
+    networks, net_names = [],[]
+    for name in names:
+        filename = 'multiplex_pp_data/'+name+'_Multiplex_Genetic/Dataset/'+name.lower()+'_genetic_multiplex.edges'
+        M = load_ppi_data_net(filename)
+        networks.append(M)
+        net_names.append(name)
+    boundaries = [6,7,8,11]
+    labels = ['Animalia','Plantae','Chromalveolata','Fungi']
+    file_prefix = 'ppi_by_kingdom'
+    with open(netdir+'networks_'+file_prefix+'.pickle','wb') as f:
+        cPickle.dump(networks,f)
+    with open(netdir+'netnames_'+file_prefix+'.pickle','wb') as g:
+        cPickle.dump(net_names,g)
+    with open(netdir+'boundaries_'+file_prefix+'.pickle','wb') as h:
+        cPickle.dump(boundaries,h)
+    with open(netdir+'labels_'+file_prefix+'.pickle','wb') as j:
+        cPickle.dump(labels,j)
+
 def precision_recall_plot(all_dists, boundaries, dist_name='', AUPR_writefilename=None):
     '''
     Plots the Precision-Recall curves and computes the AUPR values
