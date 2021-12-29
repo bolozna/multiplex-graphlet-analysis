@@ -105,6 +105,7 @@ def make_orbits(test_set_type='random',n_nets=10,n_n=1000,n_l=3,m=2,use_simple_c
             print('Orbit list '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
         count = 0
         for net, name in zip(networks, net_names):
+            assert net.fullyInterconnected, "Only fully interconnected nets allowed (invariant calculation)"
             # below: interface function for doing all of this, should work but maybe needs a test
             # TODO: test and use the interface instead to simplify this code, fix save_name
             #interface.graphlet_degree_distributions(net,n,n_l_orbit,save_name='interface_'+name)
@@ -707,6 +708,7 @@ def make_ppi_orbits(nn_nl=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='all',print
             print('Orbit list '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
         count = 0
         for net, name in zip(networks, net_names):
+            assert net.fullyInterconnected, "Only fully interconnected nets allowed (invariant calculation)"
             # below: interface function for doing all of this, should work but maybe needs a test
             # TODO: test and use the interface instead to simplify this code, fix save_name
             #interface.graphlet_degree_distributions(net,n,n_l_orbit,save_name='interface_'+name)
