@@ -635,7 +635,7 @@ def load_ppi_data_net(filename,layer_filename):
             interaction = linedata[1]
             if interaction in allowed_interactions:
                 mapping_layer_numbers[layerID] = allowed_interactions[interaction]
-    M = pymnet.MultiplexNetwork(couplings=None,directed=False,fullyInterconnected=False)
+    M = pymnet.MultiplexNetwork(couplings=None,directed=False,fullyInterconnected=True)
     with open(filename,'r') as f:
         for line in f:
             linedata = line.split()
