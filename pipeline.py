@@ -864,6 +864,26 @@ def make_ppi_figures(nn_nls=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='all'):
     fig_auprs_combined.savefig(fig_dir+'pairwise_auprs_combined.pdf',bbox_inches='tight')
     plt.close(fig_auprs_combined)
 
+def print_ppi_net_stats():
+    n_l = 3
+    netdir = 'Nets/'
+    file_prefix = 'ppi_by_kingdom'
+    with open(netdir+'networks_'+file_prefix+'.pickle','rb') as f:
+        networks = cPickle.load(f)
+    with open(netdir+'netnames_'+file_prefix+'.pickle','rb') as g:
+        net_names = cPickle.load(g)
+    all_avgs = []
+    for ii,net in enumerate(networks):
+        print(net_names[ii])
+        for layer in range(n_l):
+            in_layer_edges = len(net.A[layer].edges)
+            in_layer_nodes = len(list(net.A[layer].iter_nodes()))
+            in_layer_avg_deg = (2.0*in_layer_edges)/in_layer_nodes
+            all_avgs.append(in_layer_avg_deg)
+            print(in_layer_edges,in_layer_nodes,in_layer_avg_deg)
+    print('Total avg deg:')
+    print(np.mean(all_avgs))
+
 def precision_recall_plot(all_dists, boundaries, dist_name='', AUPR_writefilename=None):
     '''
     Plots the Precision-Recall curves and computes the AUPR values
