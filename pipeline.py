@@ -744,6 +744,126 @@ def make_ppi_orbits(nn_nl=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='all',print
     end = time.time()
     print(end - start)
 
+def make_ppi_gcds(nn_nls=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='all',print_progress=True):
+    start = time.time()
+    n_l = 3
+    netdir = 'Nets/'
+    file_prefix = 'ppi_by_kingdom'
+    orbit_dir = 'Orbits/'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nls).replace(' ','')+'/'
+    orbit_aux_dir = 'Orbits_aux/'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nls).replace(' ','')+'/'
+    netdir = 'Nets/'
+    with open(netdir+'netnames_'+file_prefix+'.pickle','rb') as f:
+        net_names = cPickle.load(f)
+    with open(orbit_aux_dir+'orbit_is_d','rb') as g:
+        orbit_is_d = cPickle.load(g)
+    with open(orbit_aux_dir+'orbit_lists','rb') as h:
+        orbit_lists = cPickle.load(h)
+    gcd_dir = 'GCDs/'
+    gcd_aux_dir = 'GCDs_aux/'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nls).replace(' ','')+'/'
+    if not os.path.exists(gcd_dir):
+        os.makedirs(gcd_dir)
+    if not os.path.exists(gcd_aux_dir):
+        os.makedirs(gcd_aux_dir)
+    layers = list(range(n_l))
+    all_gcds = {}
+    rs = ['', 'R']
+    for nn_nl, r in itertools.product(nn_nls, rs):
+        n_l_orbit, n = nn_nl
+        if r == 'R':
+            no_reds = True
+        else:
+            no_reds = False
+        orbit_list = orbit_lists[n_l_orbit]
+        orbit_is = orbit_is_d[n_l_orbit]
+        if n_l_orbit == 1:
+            net_layers = [0]
+        elif allowed_aspects_orbits == [0]:
+            net_layers = layers
+        else:
+            net_layers = list(range(n_l_orbit))
+        gcd_aux_savename = gcd_aux_dir+'_'.join(filter(None,[str(n_l_orbit),str(n),str(r)]))+'.pickle'
+        if os.path.exists(gcd_aux_savename):
+            with open(gcd_aux_savename,'rb') as aux_f:
+                gcds = cPickle.load(aux_f)
+        else:
+            gcds = data_analysis.GCDs(net_names, n, n_l_orbit, net_layers, orbit_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects_orbits)
+            with open(gcd_aux_savename,'wb') as aux_g:
+                cPickle.dump(gcds,aux_g)
+        all_gcds[(n_l_orbit, n, r)] = gcds
+        if print_progress:
+            print('GCDs '+str(n_l_orbit)+' layers, '+str(n)+' nodes done')
+    if DPK_available:
+        gcd_aux_savename = gcd_aux_dir+'DPK'+'.pickle'
+        dpk_aux_dir = gcd_aux_dir+'DPK_GCMs/'
+        if os.path.exists(gcd_aux_savename):
+            with open(gcd_aux_savename,'rb') as aux_h:
+                gcds = cPickle.load(aux_h)
+        else:
+            with open(netdir+'networks_'+file_prefix+'.pickle','rb') as j:
+                networks = cPickle.load(j)
+            gcds = gcds_for_Dimitrova_Petrovski_Kocarev_method(networks,dpk_aux_dir)
+            with open(gcd_aux_savename,'wb') as aux_j:
+                cPickle.dump(gcds,aux_j)
+        all_gcds[('DPK','','')] = gcds
+        if print_progress:
+            print('GCDs DPK method done')
+    with open(gcd_dir+'all_gcds_'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nls).replace(' ','')+'.pickle','wb') as k:
+        cPickle.dump(all_gcds,k)
+    end = time.time()
+    print(end - start)
+
+def make_ppi_figures(nn_nls=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='all'):
+    n_l = 3
+    netdir = 'Nets/'
+    file_prefix = 'ppi_by_kingdom'
+    with open(netdir+'boundaries_'+file_prefix+'.pickle','rb') as f:
+        boundaries = cPickle.load(f)
+    with open(netdir+'labels_'+file_prefix+'.pickle','rb') as g:
+        labels = cPickle.load(g)
+    gcd_dir = 'GCDs/'
+    with open(gcd_dir+'all_gcds_'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nls).replace(' ','')+'.pickle','rb') as h:
+        all_gcds = cPickle.load(h)
+    fig_dir = 'Figures/'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nls).replace(' ','')+'/'
+    if not os.path.exists(fig_dir):
+        os.makedirs(fig_dir)
+    dist_name = 'GCD'
+    fig,lgd = precision_recall_plot(all_gcds, boundaries, dist_name, fig_dir+dist_name+'_AUPRs.txt')
+    fig.savefig(fig_dir+'precision_recall.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
+    plt.close(fig)
+    fig_mds_combined = plt.figure(figsize=(15,9))
+    fig_auprs_combined,axs_auprs_combined = plt.subplots(nrows=2,ncols=3,sharey='row',sharex='col',figsize=(15,9))
+    fig_auprs_combined.subplots_adjust(bottom=0.1, top=0.9, left=0.1, right=0.8, wspace=0.02, hspace=0.02)
+    auprs_combined_cbar_ax = fig_auprs_combined.add_axes([0.83, 0.1, 0.02, 0.8])
+    mds_combined_index = {(1,3):1,(2,3):2,(3,3):3,(1,4):4,(2,4):5,('DPK',''):6}
+    auprs_combined_index = {(1,3):(0,0),(2,3):(0,1),(3,3):(0,2),(1,4):(1,0),(2,4):(1,1),('DPK',''):(1,2)}
+    for n_l, n, r in all_gcds:
+        gcds = all_gcds[(n_l, n, r)]
+        title = dist_name + '-' + str(n_l) + '-' + str(n) + r
+        if r == '':
+            mds_subax = fig_mds_combined.add_subplot(2,3,mds_combined_index[(n_l,n)],projection='3d')
+            if mds_combined_index[(n_l,n)] == 5:
+                mds_legend_subax = mds_subax
+            fig,lgd = MDS_plot(gcds, boundaries, labels, title, additional_ax=mds_subax)
+        else:
+            fig,lgd = MDS_plot(gcds, boundaries, labels, title)
+        fig.savefig(fig_dir+'mds_'+title+'.pdf',bbox_extra_artists=(lgd,),bbox_inches='tight')
+        plt.close(fig)
+        auprs = pairwise_auprs(gcds, boundaries, labels, title)
+        if r == '':
+            add_ax = axs_auprs_combined[auprs_combined_index[(n_l,n)][0],auprs_combined_index[(n_l,n)][1]]
+            fig = plot_AUPRs(auprs, labels=replace_labels(labels), title=title, additional_ax=add_ax, additional_cbar_ax=auprs_combined_cbar_ax)
+        else:
+            fig = plot_AUPRs(auprs, labels=replace_labels(labels), title=title)
+        fig.savefig(fig_dir+'pairwise_auprs_'+title+'.pdf',bbox_inches='tight')
+        plt.close(fig)
+    lgd_mds = mds_legend_subax.legend(replace_labels(labels), loc='upper center', bbox_to_anchor=(0.5, -0.05), ncol=8, fontsize=15, handletextpad=0.05)
+    fig_mds_combined.subplots_adjust(hspace=-0.05,wspace=-0.1)
+    fig_mds_combined.savefig(fig_dir+'mds_combined.pdf',bbox_extra_artists=(lgd_mds,),bbox_inches='tight')
+    plt.close(fig_mds_combined)
+    auprs_combined_cbar_ax.tick_params(axis='both', which='both', length=0, labelsize=15)
+    fig_auprs_combined.savefig(fig_dir+'pairwise_auprs_combined.pdf',bbox_inches='tight')
+    plt.close(fig_auprs_combined)
+
 def precision_recall_plot(all_dists, boundaries, dist_name='', AUPR_writefilename=None):
     '''
     Plots the Precision-Recall curves and computes the AUPR values
