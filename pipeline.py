@@ -884,6 +884,46 @@ def print_ppi_net_stats():
     print('Total avg deg:')
     print(np.mean(all_avgs))
 
+def make_ppi_gcms(nn_nls=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='all'):
+    ppi_gcms = dict()
+    n_l = 3
+    netdir = 'Nets/'
+    file_prefix = 'ppi_by_kingdom'
+    orbit_dir = 'Orbits/'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nls).replace(' ','')+'/'
+    orbit_aux_dir = 'Orbits_aux/'+file_prefix+'_'+str(allowed_aspects_orbits)+'_'+str(nn_nls).replace(' ','')+'/'
+    netdir = 'Nets/'
+    with open(netdir+'netnames_'+file_prefix+'.pickle','rb') as f:
+        net_names = cPickle.load(f)
+    with open(orbit_aux_dir+'orbit_is_d','rb') as g:
+        orbit_is_d = cPickle.load(g)
+    with open(orbit_aux_dir+'orbit_lists','rb') as h:
+        orbit_lists = cPickle.load(h)
+    # prepare nested dict
+    for nn in net_names:
+        ppi_gcms[nn] = dict()
+    layers = list(range(n_l))
+    rs = ['', 'R']
+    for nn_nl, r in itertools.product(nn_nls, rs):
+        n_l_orbit, n = nn_nl
+        if r == 'R':
+            no_reds = True
+        else:
+            no_reds = False
+        orbit_list = orbit_lists[n_l_orbit]
+        orbit_is = orbit_is_d[n_l_orbit]
+        if n_l_orbit == 1:
+            net_layers = [0]
+        elif allowed_aspects_orbits == [0]:
+            net_layers = layers
+        else:
+            net_layers = list(range(n_l_orbit))
+        curr_orbs = get_orbit_matrices(net_names, n, n_l_orbit, net_layers, orbit_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects_orbits)
+        for ii,orb in enumerate(curr_orbs):
+            GCM = pymnet.graphlets.GCM(orb)
+            ppi_gcms[net_names[ii]][(nn_nl,r)] = GCM
+    with open('ppi_gcms.pickle','wb') as resfile:
+        cPickle.dump(ppi_gcms,resfile)
+
 def find_orbit_statistics_example_networks():
     all_stats = dict()
     n_nets = 30
