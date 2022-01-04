@@ -884,6 +884,122 @@ def print_ppi_net_stats():
     print('Total avg deg:')
     print(np.mean(all_avgs))
 
+def find_orbit_statistics_example_networks():
+    all_stats = dict()
+    n_nets = 30
+    n_n = 1000
+    n_l = 3
+    use_simple_conf = False
+    use_simple_conf_plex = True
+    allowed_aspects_orbits = 'all'
+    for test_set_type in ['random','random_deg_progression','graphlet_insertion_4_2','graphlet_insertion_3_3']:
+        all_stats[test_set_type] = dict()
+        if test_set_type == 'random':
+            m = 2
+            file_prefix = '_'.join([str(n_nets),str(n_n),str(n_l),str(m),str(use_simple_conf),str(use_simple_conf_plex)])
+        elif test_set_type == 'random_deg_progression':
+            m = [1,2,3,4,5,6]
+            file_prefix = '_'.join(['deg_progression',str(n_nets),str(n_n),str(n_l),str(m).replace(' ',''),str(use_simple_conf),str(use_simple_conf_plex)])
+        elif test_set_type[:18] == 'graphlet_insertion':
+            m = 2
+            n_classes = 5
+            allowed_aspects_graphlets = 'all'
+            graphlet_frequency = 3
+            if test_set_type[19:] == '4_2':
+                n_different_graphlets = 20
+                graphlet_size = (4,2)
+            if test_set_type[19:] == '3_3':
+                n_different_graphlets = 10
+                graphlet_size = (3,3)
+            file_prefix = '_'.join(['graphlet_insertion',str(n_nets),str(n_n),str(n_l),str(m),str(allowed_aspects_graphlets),str(n_classes),str(n_different_graphlets),str(graphlet_frequency),'-'.join([str(a) for a in graphlet_size])])
+        orbit_dir = 'Orbits/'+file_prefix+'_'+str(allowed_aspects_orbits)+'/'
+        orbit_aux_dir = 'Orbits_aux/'+file_prefix+'_'+str(allowed_aspects_orbits)+'/'
+        netdir = 'Nets/'
+        with open(netdir+'netnames_'+file_prefix+'.pickle','rb') as f:
+            net_names = cPickle.load(f)
+        with open(orbit_aux_dir+'orbit_is_d','rb') as g:
+            orbit_is_d = cPickle.load(g)
+        with open(orbit_aux_dir+'orbit_lists','rb') as h:
+            orbit_lists = cPickle.load(h)
+        layers = list(range(n_l))
+        nn_nls = [(1,4), (1,3), (2,4), (2,3), (3,3)]
+        rs = ['', 'R']
+        for nn_nl, r in itertools.product(nn_nls, rs):
+            nonzeros = []
+            zeros = []
+            mean_counts = []
+            n_l_orbit, n = nn_nl
+            if r == 'R':
+                no_reds = True
+            else:
+                no_reds = False
+            orbit_list = orbit_lists[n_l_orbit]
+            orbit_is = orbit_is_d[n_l_orbit]
+            if n_l_orbit == 1:
+                net_layers = [0]
+            elif allowed_aspects_orbits == [0]:
+                net_layers = layers
+            else:
+                net_layers = list(range(n_l_orbit))
+            curr_orbs = get_orbit_matrices(net_names, n, n_l_orbit, net_layers, orbit_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects_orbits)
+            for orb in curr_orbs:
+                # number of nonzero orbits
+                nonzeros.append((((orb > 0).astype(int).sum(axis=0)) > 0).astype(int).sum(axis=0))
+                # number of zero orbits
+                zeros.append((((orb > 0).astype(int).sum(axis=0)) == 0).astype(int).sum(axis=0))
+                # average orbit count
+                mean_counts.append(orb.values.sum()/float(orb.shape[0]*orb.shape[1]))
+                # total number of orbits (same for all nets)
+                total_number_of_orbits = orb.shape[1]
+            all_stats[test_set_type][(nn_nl,r)] = dict()
+            all_stats[test_set_type][(nn_nl,r)]['nonzero_avg'] = np.mean(nonzeros)
+            all_stats[test_set_type][(nn_nl,r)]['nonzero_std'] = np.std(nonzeros)
+            all_stats[test_set_type][(nn_nl,r)]['zero_avg'] = np.mean(zeros)
+            all_stats[test_set_type][(nn_nl,r)]['zero_std'] = np.std(zeros)
+            all_stats[test_set_type][(nn_nl,r)]['mean_count_avg'] = np.mean(mean_counts)
+            all_stats[test_set_type][(nn_nl,r)]['mean_count_std'] = np.std(mean_counts)
+            all_stats[test_set_type][(nn_nl,r)]['total_number_of_orbits'] = total_number_of_orbits
+    with open('orbit_statistics.pickle','wb') as resfile:
+        cPickle.dump(all_stats,resfile)
+    return all_stats
+
+def get_orbit_matrices(nets, n, n_l, layers, res_dir, orbit_is, orbit_list, no_reds=False, allowed_aspects='all'):
+    '''
+    Parameters
+    ----------
+    nets : list of strs
+        Network names used in the file names
+    n : int
+        Max number of nodes
+    n_l : int
+        Number of layers
+    layers : list
+        Layers used to generate the graphlets
+    res_dir : str
+        Directory where orbit counts are stored
+    orbit_list : list of orbits
+        All orbits with n_l layers and max n nodes in the order they are saved
+        in the files.
+    no_reds : boolean
+        If True redundant orbits are removed
+    '''
+    if no_reds:
+        inds, eqs = graphlets.independent_equations(n, n_l, layers, allowed_aspects=allowed_aspects)
+        reds = graphlets.redundant_orbits(inds, eqs, orbit_is, orbit_list) #redundants[n_l]
+    for net in nets:
+        o_dir = res_dir + net + "_" + str(n_l)
+        orbits = data_analysis.sum_orbit_counts(o_dir, orbit_list)
+        if n_l <= 1:
+            cols = data_analysis.get_column_names(orbit_list)
+            orbits = orbits.rename(columns=cols)
+        if no_reds:
+            orbits = orbits.drop(reds, axis=1)
+        col_names = list(orbits)
+        for col in col_names:
+            if col[1] > str(n):
+                orbits = orbits.drop([col], axis=1)
+        yield orbits
+
 def precision_recall_plot(all_dists, boundaries, dist_name='', AUPR_writefilename=None):
     '''
     Plots the Precision-Recall curves and computes the AUPR values
