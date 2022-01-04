@@ -924,6 +924,44 @@ def make_ppi_gcms(nn_nls=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='all'):
     with open('ppi_gcms.pickle','wb') as resfile:
         cPickle.dump(ppi_gcms,resfile)
 
+def make_comparable_net_gcms(nn_nls=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='all'):
+    gcms = dict()
+    n_l = 3
+    orbit_aux_dir =  'Orbits_aux/deg_progression_30_1000_3_[1,2,3,4,5,6]_False_True_all/'
+    with open(orbit_aux_dir+'orbit_is_d','rb') as g:
+        orbit_is_d = cPickle.load(g)
+    with open(orbit_aux_dir+'orbit_lists','rb') as h:
+        orbit_lists = cPickle.load(h)
+    orbit_dir = 'Orbits/deg_progression_30_1000_3_[1,2,3,4,5,6]_False_True_all/'
+    # we only want the nets for which m = 1, which is the first five nets of each model
+    for model in ['ba','ba_plex','conf','conf_plex','er_0','er_20','geo','ws']:
+        for ii in range(5):
+            current_net_name_as_list = [model+'_'+str(ii)]
+            gcms[current_net_name_as_list[0]] = dict()
+            layers = list(range(n_l))
+            rs = ['', 'R']
+            for nn_nl, r in itertools.product(nn_nls, rs):
+                n_l_orbit, n = nn_nl
+                if r == 'R':
+                    no_reds = True
+                else:
+                    no_reds = False
+                orbit_list = orbit_lists[n_l_orbit]
+                orbit_is = orbit_is_d[n_l_orbit]
+                if n_l_orbit == 1:
+                    net_layers = [0]
+                elif allowed_aspects_orbits == [0]:
+                    net_layers = layers
+                else:
+                    net_layers = list(range(n_l_orbit))
+                # iterate over list containing only one net
+                curr_orbs = get_orbit_matrices(current_net_name_as_list, n, n_l_orbit, net_layers, orbit_dir, orbit_is, orbit_list, no_reds=no_reds, allowed_aspects=allowed_aspects_orbits)
+                for orb in curr_orbs:
+                    GCM = pymnet.graphlets.GCM(orb)
+                    gcms[current_net_name_as_list[0]][(nn_nl,r)] = GCM
+    with open('m1_nets_gcms.pickle','wb') as resfile:
+        cPickle.dump(gcms,resfile)
+
 def find_orbit_statistics_example_networks():
     all_stats = dict()
     n_nets = 30
