@@ -962,6 +962,31 @@ def make_comparable_net_gcms(nn_nls=[(1,3),(2,3),(3,3)],allowed_aspects_orbits='
     with open('m1_nets_gcms.pickle','wb') as resfile:
         cPickle.dump(gcms,resfile)
 
+def make_ppi_matching(nn_nls=[(1,3),(2,3),(3,3)]):
+    all_mean_gcds = dict()
+    netdir = 'Nets/'
+    file_prefix = 'ppi_by_kingdom'
+    with open(netdir+'netnames_'+file_prefix+'.pickle','rb') as f:
+        ppi_net_names = cPickle.load(f)
+    with open('ppi_gcms.pickle','rb') as f:
+        ppi_gcms = cPickle.load(f)
+    with open('m1_nets_gcms.pickle','rb') as g:
+        model_gcms = cPickle.load(g)
+    # prepare gcd dict
+    for modelname in ['ba','ba_plex','conf','conf_plex','er_0','er_20','geo','ws']:
+        all_mean_gcds[modelname] = dict()
+    rs = ['', 'R']
+    for nn_nl, r in itertools.product(nn_nls, rs):
+        for model in ['ba','ba_plex','conf','conf_plex','er_0','er_20','geo','ws']:
+            current_model_all_gcds = []
+            for ii in range(5):
+                current_model_net = model+'_'+str(ii)
+                for ppi_net in ppi_net_names:
+                    current_model_all_gcds.append(pymnet.graphlets.GCD(ppi_gcms[ppi_net][(nn_nl,r)],model_gcms[current_model_net][(nn_nl,r)]))
+            all_mean_gcds[model][(nn_nl,r)] = np.mean(current_model_all_gcds)
+    with open('ppi_vs_model_mean_gcds.pickle','wb') as resfile:
+        cPickle.dump(all_mean_gcds,resfile)
+
 def find_orbit_statistics_example_networks():
     all_stats = dict()
     n_nets = 30
